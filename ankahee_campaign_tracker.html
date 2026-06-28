@@ -394,9 +394,21 @@
     display: none;
     background: #fdf0ec; border: 1.5px solid #f5c3b3;
     border-radius: 8px; padding: 14px 20px;
-    margin-bottom: 20px; color: var(--coral);
-    font-size: 13px; line-height: 1.5;
+    margin-bottom: 20px; color: var(--text);
+    font-size: 13px; line-height: 1.8;
   }
+  #error-banner strong { color: var(--coral); }
+  #error-banner code {
+    background: #f4f4f4; padding: 2px 6px; border-radius: 3px;
+    font-size: 11px; color: var(--teal-dark);
+  }
+  .github-steps {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 6px; padding: 12px 16px; margin-top: 10px;
+    font-size: 12px; line-height: 2;
+  }
+  .github-steps ol { padding-left: 18px; }
+  .github-steps li { margin-bottom: 2px; }
 
   @media (max-width: 768px) {
     .cards-row { grid-template-columns: repeat(3, 1fr); }
@@ -618,52 +630,51 @@
 // open the sheet → File → Publish to web → choose WSPD tab → CSV → copy link and replace below.
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSxUJ2mtcQb2NeAEDntqCYPKsbkiSd8LYqiGEEpbp4nfnDnOIpVu0iZhtD0NMxDcrUBfrNmsRMcc3vl/pub?gid=0&single=true&output=csv';
 
-// Column indices (0-based) — adjust if your sheet order differs
-const COL = { cat:0, task:1, owner:2, due:3, revised:4, priority:5, status:6, remarks:7 };
+// Column indices (0-based) — matches sheet: Sr No | Category | Task | Priority | Owner | Due Date | Revised Due Date | Status | Remarks
+const COL = { srno:0, cat:1, task:2, priority:3, owner:4, due:5, revised:6, status:7, remarks:8 };
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 let allTasks = [];
 let today    = new Date(); today.setHours(0,0,0,0);
 
 // ── LOAD DATA ────────────────────────────────────────────────────────────────
-// Uses AllOrigins as a CORS proxy so the browser can fetch Google Sheets CSV
-// from GitHub Pages or a local file without being blocked.
 async function loadData() {
   document.getElementById('loading').style.display = 'flex';
   document.getElementById('error-banner').style.display = 'none';
 
-  const csvUrl   = SHEET_CSV_URL + '&t=' + Date.now();
-  const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(csvUrl);
+  const csvUrl = SHEET_CSV_URL + '&t=' + Date.now();
+
+  // Three proxies tried in order — first one that works wins.
+  // corsproxy.io works from local files (null origin) and GitHub Pages.
+  const attempts = [
+    { label: 'corsproxy',   fn: () => fetchViaCorsproxy(csvUrl)   },
+    { label: 'allorigins',  fn: () => fetchViaAllOrigins(csvUrl)  },
+    { label: 'direct',      fn: () => fetchDirect(csvUrl)         },
+  ];
 
   let text = null;
-
-  // ── Attempt 1: AllOrigins proxy (works from GitHub Pages & local files)
-  try {
-    const res = await fetch(proxyUrl);
-    if (res.ok) {
-      const json = await res.json();
-      text = json.contents;
-    }
-  } catch(e1) { /* proxy unavailable, will try direct */ }
-
-  // ── Attempt 2: Direct fetch (works when CORS is not an issue, e.g. some servers)
-  if (!text) {
+  for (const attempt of attempts) {
     try {
-      const res = await fetch(csvUrl, { mode: 'cors' });
-      if (res.ok) text = await res.text();
-    } catch(e2) { /* direct also blocked */ }
+      text = await attempt.fn();
+      if (text && text.length > 10) break;
+    } catch(e) { /* try next */ }
   }
 
-  if (!text) {
+  if (!text || text.length < 10) {
     showError(
-      'Could not reach Google Sheets. Two things to check:<br><br>' +
-      '<strong>1. Sheet published correctly?</strong> Go to <em>File → Share → Publish to web</em>, ' +
-      'select the <em>WSPD</em> tab, choose <em>CSV</em>, click Publish. Copy the URL it gives ' +
-      'and paste it as <code>SHEET_CSV_URL</code> at the top of this HTML file.<br><br>' +
-      '<strong>2. If you\'re opening the HTML as a local file</strong> (file:// in browser address bar), ' +
-      'it may still be blocked. Upload to GitHub Pages first, or test by opening in Chrome and ' +
-      'disabling CORS via: <em>chrome.exe --disable-web-security --user-data-dir=/tmp/test</em><br><br>' +
-      '<strong>Current URL being fetched:</strong><br><code style="font-size:10px;word-break:break-all;">' + SHEET_CSV_URL + '</code>'
+      '<strong>You\'re opening this as a local file</strong> — the browser blocks all external requests from local files, including proxies.<br><br>' +
+      'The easiest fix is to put it on <strong>GitHub Pages</strong> (free, 5 minutes):<br>' +
+      '<div class="github-steps"><ol>' +
+      '<li>Go to <a href="https://github.com" target="_blank" style="color:var(--teal)">github.com</a> → sign in or create a free account</li>' +
+      '<li>Click <strong>New repository</strong> → name it anything (e.g. <code>ankahee-tracker</code>) → set to <strong>Public</strong> → Create</li>' +
+      '<li>Click <strong>Add file → Upload files</strong> → drag in this HTML file → Commit changes</li>' +
+      '<li>Go to <strong>Settings → Pages</strong> → under Source select <strong>main branch</strong> → Save</li>' +
+      '<li>GitHub gives you a URL like <code>https://yourusername.github.io/ankahee-tracker/ankahee_tracker.html</code></li>' +
+      '<li>Open that URL — the dashboard will load your sheet data correctly</li>' +
+      '</ol></div>' +
+      '<br><strong>Want to test locally instead?</strong> Open Chrome, press Win+R, type:<br>' +
+      '<code>chrome --disable-web-security --user-data-dir=C:\\temp\\chrome-test</code><br>' +
+      'Then open the file from that Chrome window. (Only use this for testing, not normal browsing.)'
     );
     document.getElementById('loading').style.display = 'none';
     return;
@@ -676,10 +687,32 @@ async function loadData() {
     document.getElementById('last-refresh').textContent =
       new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
   } catch(parseErr) {
-    showError('Data loaded but could not be parsed. Check that your sheet columns are in the right order: Category, Task, Owner, Due Date, Revised Due Date, Priority, Status, Remarks. Error: ' + parseErr.message);
+    showError('Data loaded but could not be parsed. Check that your sheet columns match exactly: ' +
+      'Column A=Category, B=Task, C=Owner, D=Due Date, E=Revised Due Date, F=Priority, G=Status, H=Remarks. ' +
+      'Error: ' + parseErr.message);
   }
-
   document.getElementById('loading').style.display = 'none';
+}
+
+async function fetchViaCorsproxy(url) {
+  // corsproxy.io allows null origin (local files)
+  const res = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+  if (!res.ok) throw new Error('corsproxy ' + res.status);
+  return await res.text();
+}
+
+async function fetchViaAllOrigins(url) {
+  // allorigins returns JSON wrapper — works on GitHub Pages but not local files
+  const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
+  if (!res.ok) throw new Error('allorigins ' + res.status);
+  const json = await res.json();
+  return json.contents;
+}
+
+async function fetchDirect(url) {
+  const res = await fetch(url, { mode: 'cors' });
+  if (!res.ok) throw new Error('direct ' + res.status);
+  return await res.text();
 }
 
 // ── CSV PARSER ───────────────────────────────────────────────────────────────
