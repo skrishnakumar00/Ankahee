@@ -39,10 +39,20 @@ header {
   box-shadow: 0 2px 8px rgba(0,0,0,0.18);
 }
 .hdr-left  { display: flex; align-items: center; gap: 12px; }
-.hdr-logo  { width: 34px; height: 34px; border-radius: 50%; background: var(--white); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--teal-dark); font-size: 13px; flex-shrink: 0; }
+.hdr-logo  { width: 38px; height: 38px; border-radius: 50%; background: var(--white); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+.hdr-logo img { width: 34px; height: 34px; object-fit: contain; border-radius: 50%; }
 .hdr-title { color: var(--white); font-size: 15px; font-weight: 600; }
 .hdr-sub   { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 1px; }
-.hdr-right { color: rgba(255,255,255,0.5); font-size: 11px; white-space: nowrap; }
+.hdr-right { display: flex; align-items: center; gap: 14px; white-space: nowrap; }
+.hdr-sheet-link {
+  color: rgba(255,255,255,0.9); font-size: 12px; font-weight: 500;
+  text-decoration: none; border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 5px; padding: 5px 11px;
+  transition: background 0.15s, border-color 0.15s;
+  display: flex; align-items: center; gap: 5px;
+}
+.hdr-sheet-link:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.65); }
+.hdr-refresh { color: rgba(255,255,255,0.45); font-size: 11px; }
 #last-refresh { color: rgba(255,255,255,0.85); }
 
 /* ── CONTROLS ── */
@@ -296,7 +306,8 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 /* ── RESPONSIVE ── */
 @media (max-width: 700px) {
   header { padding: 0 14px; height: 56px; }
-  .hdr-right { display: none; }
+  .hdr-refresh { display: none; }
+  .hdr-sheet-link span { display: none; }
   .controls { padding: 10px 14px; gap: 8px; }
   .ctrl-select { min-width: 0; flex: 1; font-size: 12px; }
   .btn-refresh { padding: 6px 12px; margin-left: 0; }
@@ -324,13 +335,20 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 <!-- HEADER -->
 <header>
   <div class="hdr-left">
-    <div class="hdr-logo">A</div>
+    <div class="hdr-logo">
+      <img src="Logo.png" alt="Ankahee" onerror="this.parentNode.innerHTML='<span style=\'font-weight:700;color:var(--teal-dark);font-size:13px\'>A</span>'">
+    </div>
     <div>
       <div class="hdr-title">Ankahee — WSPD Tracker</div>
       <div class="hdr-sub">World Suicide Prevention Day</div>
     </div>
   </div>
-  <div class="hdr-right">Refreshed: <span id="last-refresh">—</span></div>
+  <div class="hdr-right">
+    <a class="hdr-sheet-link" href="https://docs.google.com/spreadsheets/d/1sWFTPuNJaM5SiJcrPFLO62qi7r0P1VDRtnWhfM0orlI/edit" target="_blank">
+      ✎ <span>Edit in Sheet</span> ↗
+    </a>
+    <span class="hdr-refresh">Refreshed: <span id="last-refresh">—</span></span>
+  </div>
 </header>
 
 <!-- CONTROLS -->
