@@ -723,6 +723,18 @@ function updateProgress() {
 }
 
 /* ====================================================================
+   VALIDATION
+   ==================================================================== */
+function getMissingFields() {
+  const allFields = [...FIELDS, ...RISK_FIELDS, ...WRAPUP_FIELDS].filter(f => !f.optional);
+  const visible = allFields.filter(f => !f.showIf || f.showIf(formData));
+  return visible.filter(f => {
+    const v = formData[f.key];
+    return v === undefined || v === "" || (Array.isArray(v) && v.length === 0);
+  }).map(f => f.key);
+}
+
+/* ====================================================================
    SAVE
    ==================================================================== */
 async function handleSave() {
@@ -733,6 +745,20 @@ async function handleSave() {
   if (!formData["Pseudonym"]) {
     errorEl.textContent = "Please enter your name first.";
     errorEl.style.display = "block";
+    return;
+  }
+
+  const missing = getMissingFields();
+  if (missing.length > 0) {
+    errorEl.textContent = "Please complete: " + missing.join(", ");
+    errorEl.style.display = "block";
+    const firstMissing = document.getElementById(`field_${slug(missing[0])}`);
+    if (firstMissing) {
+      firstMissing.scrollIntoView({ behavior: "smooth", block: "center" });
+      firstMissing.style.outline = "2px solid var(--risk)";
+      firstMissing.style.borderRadius = "10px";
+      setTimeout(() => { firstMissing.style.outline = ""; }, 2000);
+    }
     return;
   }
 
