@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Call Log</title>
+<style>
+  /* ============ DESIGN TOKENS ============ */
+  :root {
+    --bg: #FAF6F2;
+    --surface: #FFFFFF;
+    --surface-soft: #F3EEE8;
+    --primary: #5B4B7C;
+    --primary-dark: #443A5E;
+    --primary-soft: #EDE8F3;
+    --success: #4F8A6D;
+    --success-soft: #E7F1EB;
+    --risk: #B8524A;
+    --risk-soft: #F7E9E7;
+    --text: #2E2A33;
+    --text-muted: #7A7480;
+    --border: #E4DDD6;
+    --radius: 14px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 10px rgba(46, 42, 51, 0.06);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ============ HEADER ============ */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  header img.logo {
+    height: 36px;
+    width: auto;
+    border-radius: 6px;
+  }
+  header .title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary-dark);
+    letter-spacing: 0.2px;
+  }
+  header .subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+
+  .progress-track {
+    height: 4px;
+    background: var(--surface-soft);
+    position: sticky;
+    top: 60px;
+    z-index: 19;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--primary);
+    width: 0%;
+    transition: width 0.35s ease;
+  }
+
+  /* ============ LAYOUT ============ */
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px 16px 120px;
+  }
+
+  .section {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+  }
+  .section.risk-section {
+    background: var(--risk-soft);
+    border-color: #E9C9C5;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--primary-dark);
+    margin: 0 0 4px 0;
+  }
+  .risk-section .section-title { color: var(--risk); }
+  .section-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0 0 16px 0;
+  }
+
+  /* ============ IDENTITY BAR ============ */
+  .identity-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--primary-soft);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+  .identity-bar strong { color: var(--primary-dark); }
+  .identity-bar button {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .date-line {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .date-line button {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 13px;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 2px;
+  }
+
+  /* ============ FIELDS ============ */
+  .field { margin-bottom: 18px; }
+  .field:last-child { margin-bottom: 0; }
+  .field-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .field-label .optional {
+    font-weight: 400;
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-left: 4px;
+  }
+
+  .chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip {
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-size: 14px;
+    color: var(--text);
+    cursor: pointer;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    user-select: none;
+    transition: all 0.15s ease;
+  }
+  .chip:active { transform: scale(0.97); }
+  .chip.selected {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    font-weight: 600;
+  }
+  .risk-section .chip.selected {
+    background: var(--risk);
+    border-color: var(--risk);
+  }
+  .chip-multi.selected::before {
+    content: "✓";
+    margin-right: 6px;
+    font-weight: 700;
+  }
+
+  select, input[type="text"], input[type="date"] {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    font-size: 15px;
+    background: var(--surface);
+    color: var(--text);
+    min-height: 46px;
+    font-family: inherit;
+  }
+  select:focus, input:focus, textarea:focus {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
+  }
+  textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    font-size: 15px;
+    font-family: inherit;
+    min-height: 70px;
+    resize: vertical;
+  }
+
+  .comments-toggle {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 0;
+  }
+
+  /* ============ SAVE BAR ============ */
+  .save-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    z-index: 30;
+  }
+  .save-bar-inner {
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .save-btn {
+    width: 100%;
+    padding: 15px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    min-height: 50px;
+  }
+  .save-btn:active { background: var(--primary-dark); }
+  .save-btn:disabled { opacity: 0.5; }
+  .save-error {
+    font-size: 13px;
+    color: var(--risk);
+    text-align: center;
+    margin-top: 8px;
+    display: none;
+  }
+
+  /* ============ CONFIRMATION OVERLAY ============ */
+  .confirm-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(46, 42, 51, 0.35);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .confirm-overlay.show { display: flex; }
+  .confirm-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 32px 28px;
+    text-align: center;
+    max-width: 320px;
+    box-shadow: 0 8px 30px rgba(46,42,51,0.15);
+  }
+  .confirm-check {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--success-soft);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+  }
+  .confirm-check svg {
+    width: 28px;
+    height: 28px;
+  }
+  .confirm-check circle {
+    stroke: var(--success);
+    stroke-width: 2;
+    fill: none;
+    stroke-dasharray: 63;
+    stroke-dashoffset: 63;
+    animation: circleDraw 0.5s ease forwards;
+  }
+  .confirm-check path {
+    stroke: var(--success);
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
+    animation: checkDraw 0.3s ease forwards 0.45s;
+  }
+  @keyframes circleDraw { to { stroke-dashoffset: 0; } }
+  @keyframes checkDraw { to { stroke-dashoffset: 0; } }
+
+  .confirm-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 6px;
+  }
+  .confirm-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .loading-note {
+    text-align: center;
+    padding: 40px 16px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .confirm-check circle, .confirm-check path { animation: none; stroke-dashoffset: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
+  <div>
+    <div class="title">Call Log</div>
+    <div class="subtitle">Quick entry — takes less than a minute</div>
+  </div>
+</header>
+<div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+<main id="formRoot">
+  <div class="loading-note" id="loadingNote">Loading form…</div>
+</main>
+
+<div class="save-bar" id="saveBar" style="display:none;">
+  <div class="save-bar-inner">
+    <button class="save-btn" id="saveBtn">Save call log</button>
+    <div class="save-error" id="saveError">Couldn't save — check your connection and try again.</div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-card">
+    <div class="confirm-check">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M7 12.5l3 3 7-7"></path>
+      </svg>
+    </div>
+    <p class="confirm-title">Logged. Thank you.</p>
+    <p class="confirm-sub">Ready whenever you take the next call.</p>
+  </div>
+</div>
+
+<script>
+/* ====================================================================
+   CONFIGURATION — edit these two values for your deployment
+   ==================================================================== */
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQWrjsMogzPwuypjRFzeJa1TFQTjrT9gDmEurMkmm2xKbPwVifGJnGsf0qxTDixAtp/exec";
+
+// Risk level values (exactly as they appear in your Config sheet's
+// "Risk level" column) that should trigger the L2/L3-only questions.
+const ESCALATED_RISK_LEVELS = ["L2", "L3"];
+const HIGH_RISK_LEVEL = "L3"; // triggers de-escalated / help provided
+
+/* ====================================================================
+   FIELD DEFINITIONS
+   Each field maps to: the Logs column name it writes to, and (for
+   config-driven fields) the Config sheet column it reads options from.
+   ==================================================================== */
+const YES_NO = ["Yes", "No"];
+
+const FIELDS = [
+  { key: "Type of call", config: "Type of call", type: "auto", default: "Befriending" },
+  { key: "Name of caller", type: "text", optional: true },
+  { key: "Gender", config: "Gender", type: "auto" },
+  { key: "Duration", config: "Duration", type: "auto" },
+  { key: "Language", config: "Language", type: "auto" },
+  { key: "Type of caller", config: "Type of caller", type: "auto" },
+  { key: "Age of caller", config: "Age of caller", type: "auto" },
+  { key: "Occupation", config: "Occupation", type: "auto" },
+  { key: "Support system", config: "Support system", type: "auto" },
+];
+
+const RISK_FIELDS = [
+  { key: "Risk assessment conducted", type: "chips", options: YES_NO },
+  { key: "Risk level", config: "Risk level", type: "auto",
+    showIf: (d) => d["Risk assessment conducted"] === "Yes" },
+  { key: "Self harm", type: "chips", options: YES_NO },
+  { key: "Suicide promise taken", type: "chips", options: YES_NO,
+    showIf: (d) => ESCALATED_RISK_LEVELS.includes(d["Risk level"]) },
+  { key: "Call deescalated", type: "chips", options: YES_NO,
+    showIf: (d) => d["Risk level"] === HIGH_RISK_LEVEL },
+  { key: "Help provided", type: "chips", options: YES_NO,
+    showIf: (d) => d["Risk level"] === HIGH_RISK_LEVEL },
+];
+
+const WRAPUP_FIELDS = [
+  { key: "Nature of problem", config: "Nature of problem", type: "auto", multi: true },
+  { key: "Feelings addressed", config: "Feelings addressed", type: "auto", multi: true },
+  { key: "Caller at end of call", config: "Caller at end of call", type: "auto",
+    showIf: (d) => d["Feelings addressed"] && d["Feelings addressed"].length > 0 },
+];
+
+/* ====================================================================
+   STATE
+   ==================================================================== */
+let CONFIG = {};
+let formData = {};
+let pseudonymList = [];
+
+/* ====================================================================
+   INIT
+   ==================================================================== */
+init();
+
+async function init() {
+  try {
+    const res = await fetch(APPS_SCRIPT_URL + "?action=getConfig");
+    const json = await res.json();
+    if (json.status !== "success") throw new Error(json.message || "Config load failed");
+    CONFIG = json.config;
+    pseudonymList = CONFIG["Pseudonym"] || [];
+  } catch (err) {
+    document.getElementById("loadingNote").textContent =
+      "Couldn't load the form. Check the connection and reload.";
+    console.error(err);
+    return;
+  }
+  buildForm();
+}
+
+/* ====================================================================
+   BUILD FORM
+   ==================================================================== */
+function buildForm() {
+  const root = document.getElementById("formRoot");
+  root.innerHTML = "";
+
+  // ---- Identity ----
+  const savedName = sessionStorage.getItem("volunteerName");
+  const identitySection = document.createElement("div");
+  identitySection.className = "section";
+  identitySection.id = "identitySection";
+  identitySection.innerHTML = buildIdentityHTML(savedName);
+  root.appendChild(identitySection);
+  wireIdentity(savedName);
+
+  // ---- Call basics ----
+  root.appendChild(buildSection("Call basics", null, FIELDS, false));
+
+  // ---- Risk & safety ----
+  root.appendChild(buildSection("Risk & safety", "This section matters most — please don't skip it.", RISK_FIELDS, true));
+
+  // ---- Wrap-up ----
+  root.appendChild(buildSection("Call content & wrap-up", null, WRAPUP_FIELDS, false));
+
+  // ---- Comments ----
+  root.appendChild(buildCommentsSection());
+
+  document.getElementById("saveBar").style.display = "block";
+  document.getElementById("saveBtn").addEventListener("click", handleSave);
+
+  renderAllConditionals();
+  updateProgress();
+}
+
+function buildIdentityHTML(savedName) {
+  if (savedName) {
+    return `<div class="identity-bar">
+      <span>Logging as <strong>${escapeHtml(savedName)}</strong></span>
+      <button id="changeNameBtn" type="button">Not you?</button>
+    </div>` + buildDateLine();
+  }
+  return `
+    <label class="field-label">Your name</label>
+    <input list="pseudonymOptions" id="pseudonymInput" type="text" placeholder="Start typing your name…">
+    <datalist id="pseudonymOptions">
+      ${pseudonymList.map(n => `<option value="${escapeHtml(n)}">`).join("")}
+    </datalist>
+    <div class="section-hint" style="margin-top:8px; margin-bottom:0;">You'll only need to do this once per shift — it stays set for every call you log after.</div>
+  `;
+}
+
+function buildDateLine() {
+  const now = new Date();
+  const dateStr = formatDate(now);
+  formData["Date of call"] = dateStr.iso;
+  formData["Day"] = dateStr.day;
+  formData["Month"] = dateStr.month;
+  return `<div class="date-line">
+    <span id="dateDisplay">${dateStr.display}</span>
+    <button type="button" id="editDateBtn">Not today? Edit</button>
+    <input type="date" id="dateInput" style="display:none; margin-top:6px; width:auto;">
+  </div>`;
+}
+
+function wireIdentity(savedName) {
+  if (savedName) {
+    formData["Pseudonym"] = savedName;
+    document.getElementById("changeNameBtn").addEventListener("click", () => {
+      sessionStorage.removeItem("volunteerName");
+      buildForm();
+    });
+    const editBtn = document.getElementById("editDateBtn");
+    const dateInput = document.getElementById("dateInput");
+    editBtn.addEventListener("click", () => {
+      dateInput.style.display = dateInput.style.display === "none" ? "block" : "none";
+    });
+    dateInput.addEventListener("change", () => {
+      if (!dateInput.value) return;
+      const d = new Date(dateInput.value + "T00:00:00");
+      const f = formatDate(d);
+      formData["Date of call"] = f.iso;
+      formData["Day"] = f.day;
+      formData["Month"] = f.month;
+      document.getElementById("dateDisplay").textContent = f.display;
+    });
+  } else {
+    const input = document.getElementById("pseudonymInput");
+    input.addEventListener("change", () => {
+      const val = input.value.trim();
+      if (val) {
+        sessionStorage.setItem("volunteerName", val);
+        buildForm();
+      }
+    });
+  }
+}
+
+function formatDate(d) {
+  const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const iso = d.toISOString().slice(0,10);
+  return {
+    iso,
+    day: days[d.getDay()],
+    month: months[d.getMonth()],
+    display: `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
+  };
+}
+
+function buildSection(title, hint, fields, isRisk) {
+  const section = document.createElement("div");
+  section.className = "section" + (isRisk ? " risk-section" : "");
+  let html = `<div class="section-title">${title}</div>`;
+  if (hint) html += `<div class="section-hint">${hint}</div>`;
+  fields.forEach(f => { html += `<div class="field" id="field_${slug(f.key)}"></div>`; });
+  section.innerHTML = html;
+  fields.forEach(f => renderField(section, f));
+  return section;
+}
+
+function buildCommentsSection() {
+  const section = document.createElement("div");
+  section.className = "section";
+  section.innerHTML = `
+    <button type="button" class="comments-toggle" id="commentsToggle">+ Add a note (optional)</button>
+    <div class="field" id="commentsField" style="display:none; margin-top:10px;">
+      <textarea id="commentsInput" placeholder="Anything worth noting for training or follow-up…"></textarea>
+    </div>
+  `;
+  setTimeout(() => {
+    document.getElementById("commentsToggle").addEventListener("click", () => {
+      const field = document.getElementById("commentsField");
+      const showing = field.style.display !== "none";
+      field.style.display = showing ? "none" : "block";
+    });
+    document.getElementById("commentsInput").addEventListener("input", (e) => {
+      formData["Additional comments"] = e.target.value;
+    });
+  }, 0);
+  return section;
+}
+
+/* ====================================================================
+   RENDER A SINGLE FIELD
+   ==================================================================== */
+function renderField(container, f) {
+  const wrap = container.querySelector(`#field_${slug(f.key)}`);
+  if (!wrap) return;
+
+  if (f.type === "text") {
+    wrap.innerHTML = `
+      <label class="field-label">${f.key}${f.optional ? ' <span class="optional">optional</span>' : ''}</label>
+      <input type="text" data-key="${f.key}">
+    `;
+    wrap.querySelector("input").addEventListener("input", (e) => {
+      formData[f.key] = e.target.value;
+    });
+    return;
+  }
+
+  let options = f.type === "chips" ? f.options : (CONFIG[f.config] || []);
+
+  // Apply a default value once, if this field hasn't been answered yet
+  if (f.default && formData[f.key] === undefined && options.includes(f.default)) {
+    formData[f.key] = f.default;
+  }
+
+  if (f.type === "auto" && options.length > 6 && !f.multi) {
+    // dropdown for long lists
+    wrap.innerHTML = `
+      <label class="field-label">${f.key}</label>
+      <select data-key="${f.key}">
+        <option value="">Select…</option>
+        ${options.map(o => `<option value="${escapeHtml(o)}" ${formData[f.key] === o ? "selected" : ""}>${escapeHtml(o)}</option>`).join("")}
+      </select>
+    `;
+    wrap.querySelector("select").addEventListener("change", (e) => {
+      formData[f.key] = e.target.value;
+      renderAllConditionals();
+      updateProgress();
+    });
+    return;
+  }
+
+  // chip group (single or multi select)
+  const selectedValues = f.multi ? (formData[f.key] || []) : [formData[f.key]];
+  wrap.innerHTML = `
+    <label class="field-label">${f.key}</label>
+    <div class="chip-group" data-key="${f.key}">
+      ${options.map(o => `<div class="chip${f.multi ? ' chip-multi' : ''}${selectedValues.includes(o) ? ' selected' : ''}" data-value="${escapeHtml(o)}">${escapeHtml(o)}</div>`).join("")}
+    </div>
+  `;
+  const group = wrap.querySelector(".chip-group");
+  group.querySelectorAll(".chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      if (f.multi) {
+        const current = formData[f.key] || [];
+        const val = chip.dataset.value;
+        if (current.includes(val)) {
+          formData[f.key] = current.filter(v => v !== val);
+          chip.classList.remove("selected");
+        } else {
+          formData[f.key] = [...current, val];
+          chip.classList.add("selected");
+        }
+      } else {
+        group.querySelectorAll(".chip").forEach(c => c.classList.remove("selected"));
+        chip.classList.add("selected");
+        formData[f.key] = chip.dataset.value;
+      }
+      renderAllConditionals();
+      updateProgress();
+    });
+  });
+}
+
+/* ====================================================================
+   CONDITIONAL VISIBILITY
+   ==================================================================== */
+function renderAllConditionals() {
+  [...RISK_FIELDS, ...WRAPUP_FIELDS].forEach(f => {
+    if (!f.showIf) return;
+    const wrap = document.getElementById(`field_${slug(f.key)}`);
+    if (!wrap) return;
+    const shouldShow = f.showIf(formData);
+    wrap.style.display = shouldShow ? "block" : "none";
+    if (!shouldShow) {
+      delete formData[f.key];
+      wrap.querySelectorAll(".chip.selected").forEach(c => c.classList.remove("selected"));
+      const sel = wrap.querySelector("select");
+      if (sel) sel.value = "";
+    }
+  });
+}
+
+/* ====================================================================
+   PROGRESS BAR (rough indicator, not a strict validator)
+   ==================================================================== */
+function updateProgress() {
+  const allFields = [...FIELDS, ...RISK_FIELDS, ...WRAPUP_FIELDS].filter(f => !f.optional);
+  const visible = allFields.filter(f => !f.showIf || f.showIf(formData));
+  const filled = visible.filter(f => {
+    const v = formData[f.key];
+    return v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0);
+  });
+  const pct = visible.length ? Math.round((filled.length / visible.length) * 100) : 0;
+  document.getElementById("progressFill").style.width = pct + "%";
+}
+
+/* ====================================================================
+   SAVE
+   ==================================================================== */
+async function handleSave() {
+  const btn = document.getElementById("saveBtn");
+  const errorEl = document.getElementById("saveError");
+  errorEl.style.display = "none";
+
+  if (!formData["Pseudonym"]) {
+    errorEl.textContent = "Please enter your name first.";
+    errorEl.style.display = "block";
+    return;
+  }
+
+  const payload = { ...formData };
+  Object.keys(payload).forEach(k => {
+    if (Array.isArray(payload[k])) payload[k] = payload[k].join(", ");
+  });
+
+  btn.disabled = true;
+  btn.textContent = "Saving…";
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+    showConfirmation();
+    resetFormKeepingIdentity();
+  } catch (err) {
+    console.error(err);
+    errorEl.textContent = "Couldn't save — check your connection and try again.";
+    errorEl.style.display = "block";
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Save call log";
+  }
+}
+
+function showConfirmation() {
+  const overlay = document.getElementById("confirmOverlay");
+  overlay.classList.add("show");
+  // retrigger animation
+  overlay.querySelectorAll("circle, path").forEach(el => {
+    el.style.animation = "none";
+    void el.offsetWidth;
+    el.style.animation = "";
+  });
+  setTimeout(() => overlay.classList.remove("show"), 1600);
+}
+
+function resetFormKeepingIdentity() {
+  const keepName = formData["Pseudonym"];
+  const keepDate = formData["Date of call"];
+  const keepDay = formData["Day"];
+  const keepMonth = formData["Month"];
+  formData = {
+    "Pseudonym": keepName,
+    "Date of call": keepDate,
+    "Day": keepDay,
+    "Month": keepMonth
+  };
+  buildForm();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ====================================================================
+   UTILITIES
+   ==================================================================== */
+function slug(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, "_"); }
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+</script>
+
+</body>
+</html>
