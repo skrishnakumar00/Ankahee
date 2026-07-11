@@ -154,6 +154,37 @@
     padding: 2px;
   }
 
+  .combo-wrap { position: relative; }
+  .combo-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    z-index: 25;
+  }
+  .combo-item {
+    padding: 12px 14px;
+    font-size: 15px;
+    cursor: pointer;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .combo-item:hover, .combo-item:active {
+    background: var(--primary-soft);
+  }
+  .combo-empty {
+    padding: 12px 14px;
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
   /* ============ FIELDS ============ */
   .field { margin-bottom: 18px; }
   .field:last-child { margin-bottom: 0; }
@@ -398,7 +429,7 @@
 /* ====================================================================
    CONFIGURATION — edit these two values for your deployment
    ==================================================================== */
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwQWrjsMogzPwuypjRFzeJa1TFQTjrT9gDmEurMkmm2xKbPwVifGJnGsf0qxTDixAtp/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2SJMqHOu8uGoEnm0lOiZ7DP-xaG5QSVwOiUkWgsBhVtCAPQCqHM-L0vbTu3ybydt3jQ/exec";
 
 // Risk level values (exactly as they appear in your Config sheet's
 // "Risk level" column) that should trigger the L2/L3-only questions.
@@ -412,23 +443,42 @@ const HIGH_RISK_LEVEL = "L3"; // triggers de-escalated / help provided
    ==================================================================== */
 const YES_NO = ["Yes", "No"];
 
-const FIELDS = [
-  { key: "Type of call", config: "Type of call", type: "auto", default: "Befriending" },
-  { key: "Name of caller", type: "text", optional: true },
+// Type of call values (exactly as in Config) that route to each branch.
+const SDC_VALUE = "SDC/Inappropriate";
+const BEFRIENDING_VALUE = "Befriending";
+const OTHER_VALUES = ["Third Party", "Media enquiries", "Silent or calls less than 1 min (no content)", "Other"];
+
+function getBranch(typeOfCall) {
+  if (typeOfCall === BEFRIENDING_VALUE) return "BEFRIENDING";
+  if (typeOfCall === SDC_VALUE) return "SDC";
+  if (OTHER_VALUES.includes(typeOfCall)) return "OTHER";
+  return null;
+}
+function isBranch(name) {
+  return (d) => getBranch(d["Type of call"]) === name;
+}
+
+const TYPE_OF_CALL_FIELD = { key: "Type of call", config: "Type of call", type: "auto", default: BEFRIENDING_VALUE };
+
+const BASICS_FIELDS = [
   { key: "Gender", config: "Gender", type: "auto" },
   { key: "Duration", config: "Duration", type: "auto" },
-  { key: "Language", config: "Language", type: "auto" },
-  { key: "Type of caller", config: "Type of caller", type: "auto" },
-  { key: "Age of caller", config: "Age of caller", type: "auto" },
-  { key: "Occupation", config: "Occupation", type: "auto" },
-  { key: "Support system", config: "Support system", type: "auto" },
+];
+
+const BEFRIENDING_FIELDS = [
+  { key: "Language", config: "Language", type: "auto", showIf: isBranch("BEFRIENDING") },
+  { key: "Type of caller", config: "Type of caller", type: "auto", showIf: isBranch("BEFRIENDING") },
+  { key: "Age of caller", config: "Age of caller", type: "auto", showIf: isBranch("BEFRIENDING") },
+  { key: "Occupation", config: "Occupation", type: "auto", forceChips: true, showIf: isBranch("BEFRIENDING") },
+  { key: "Support system", config: "Support system", type: "auto", multi: true, showIf: isBranch("BEFRIENDING") },
+  { key: "Name of caller", type: "text", optional: true, showIf: isBranch("BEFRIENDING") },
 ];
 
 const RISK_FIELDS = [
   { key: "Risk assessment conducted", type: "chips", options: YES_NO },
   { key: "Risk level", config: "Risk level", type: "auto",
     showIf: (d) => d["Risk assessment conducted"] === "Yes" },
-  { key: "Self harm", type: "chips", options: YES_NO },
+  { key: "Self harm", type: "chips", options: YES_NO, showIf: isBranch("BEFRIENDING") },
   { key: "Suicide promise taken", type: "chips", options: YES_NO,
     showIf: (d) => ESCALATED_RISK_LEVELS.includes(d["Risk level"]) },
   { key: "Call deescalated", type: "chips", options: YES_NO,
@@ -437,12 +487,44 @@ const RISK_FIELDS = [
     showIf: (d) => d["Risk level"] === HIGH_RISK_LEVEL },
 ];
 
-const WRAPUP_FIELDS = [
-  { key: "Nature of problem", config: "Nature of problem", type: "auto", multi: true },
-  { key: "Feelings addressed", config: "Feelings addressed", type: "auto", multi: true },
+const WRAPUP_BEFRIENDING_FIELDS = [
+  { key: "Nature of problem", config: "Nature of problem", type: "auto", multi: true, showIf: isBranch("BEFRIENDING") },
+  { key: "Feelings addressed", config: "Feelings addressed", type: "auto", multi: true, showIf: isBranch("BEFRIENDING") },
   { key: "Caller at end of call", config: "Caller at end of call", type: "auto",
-    showIf: (d) => d["Feelings addressed"] && d["Feelings addressed"].length > 0 },
+    showIf: (d) => isBranch("BEFRIENDING")(d) && d["Feelings addressed"] && d["Feelings addressed"].length > 0 },
 ];
+
+const SDC_FIELDS = [
+  { key: "3 warnings provided", config: "3 warnings provided", type: "auto", showIf: isBranch("SDC") },
+  { key: "EOR protocol initiated", config: "EOR protocol initiated", type: "auto", showIf: isBranch("SDC") },
+  { key: "Block Caller", config: "Block Caller", type: "auto", showIf: isBranch("SDC") },
+  { key: "Block Caller details", type: "text",
+    showIf: (d) => isBranch("SDC")(d) && d["Block Caller"] === "Yes" },
+];
+
+const OTHER_FIELDS = [
+  { key: "Encouraged caller to share", config: "Encouraged caller to share", type: "auto", showIf: isBranch("OTHER") },
+  { key: "Provided information about Ankahee", config: "Provided information about Ankahee", type: "auto", showIf: isBranch("OTHER") },
+];
+
+const ALL_FIELDS = [
+  TYPE_OF_CALL_FIELD, ...BASICS_FIELDS, ...BEFRIENDING_FIELDS, ...RISK_FIELDS,
+  ...WRAPUP_BEFRIENDING_FIELDS, ...SDC_FIELDS, ...OTHER_FIELDS
+];
+
+// Keys allowed to persist when Type of call changes — anything else is cleared
+const UNIVERSAL_KEYS = ["Type of call", "Pseudonym", "Date of call", "Day", "Month", "Gender", "Duration", "Risk assessment conducted",
+  "Risk level", "Suicide promise taken", "Call deescalated", "Help provided", "Additional comments"];
+const BRANCH_KEYS = {
+  BEFRIENDING: [...BEFRIENDING_FIELDS.map(f => f.key), "Self harm", ...WRAPUP_BEFRIENDING_FIELDS.map(f => f.key)],
+  SDC: SDC_FIELDS.map(f => f.key),
+  OTHER: OTHER_FIELDS.map(f => f.key),
+};
+function cleanupFormDataForBranch() {
+  const branch = getBranch(formData["Type of call"]);
+  const allowed = UNIVERSAL_KEYS.concat(BRANCH_KEYS[branch] || []);
+  Object.keys(formData).forEach(k => { if (!allowed.includes(k)) delete formData[k]; });
+}
 
 /* ====================================================================
    STATE
@@ -488,14 +570,27 @@ function buildForm() {
   root.appendChild(identitySection);
   wireIdentity(savedName);
 
-  // ---- Call basics ----
-  root.appendChild(buildSection("Call basics", null, FIELDS, false));
+  // ---- Call basics (Type of call first, then universal fields) ----
+  root.appendChild(buildSection("Call basics", null, [TYPE_OF_CALL_FIELD, ...BASICS_FIELDS], false));
 
-  // ---- Risk & safety ----
+  const branch = getBranch(formData["Type of call"]);
+
+  // ---- Befriending-only details ----
+  if (branch === "BEFRIENDING") {
+    root.appendChild(buildSection("Befriending call details", null, BEFRIENDING_FIELDS, false));
+  }
+
+  // ---- Risk & safety (always shown) ----
   root.appendChild(buildSection("Risk & safety", "This section matters most — please don't skip it.", RISK_FIELDS, true));
 
-  // ---- Wrap-up ----
-  root.appendChild(buildSection("Call content & wrap-up", null, WRAPUP_FIELDS, false));
+  // ---- Branch-specific follow-up ----
+  if (branch === "BEFRIENDING") {
+    root.appendChild(buildSection("Call content & wrap-up", null, WRAPUP_BEFRIENDING_FIELDS, false));
+  } else if (branch === "SDC") {
+    root.appendChild(buildSection("SDC / inappropriate call details", null, SDC_FIELDS, false));
+  } else if (branch === "OTHER") {
+    root.appendChild(buildSection("Additional details", null, OTHER_FIELDS, false));
+  }
 
   // ---- Comments ----
   root.appendChild(buildCommentsSection());
@@ -516,24 +611,26 @@ function buildIdentityHTML(savedName) {
   }
   return `
     <label class="field-label">Your name</label>
-    <input list="pseudonymOptions" id="pseudonymInput" type="text" placeholder="Start typing your name…">
-    <datalist id="pseudonymOptions">
-      ${pseudonymList.map(n => `<option value="${escapeHtml(n)}">`).join("")}
-    </datalist>
+    <div class="combo-wrap">
+      <input type="text" id="pseudonymSearch" autocomplete="off" placeholder="Type your name…">
+      <div class="combo-list" id="pseudonymListEl" style="display:none;"></div>
+    </div>
     <div class="section-hint" style="margin-top:8px; margin-bottom:0;">You'll only need to do this once per shift — it stays set for every call you log after.</div>
   `;
 }
 
 function buildDateLine() {
-  const now = new Date();
-  const dateStr = formatDate(now);
-  formData["Date of call"] = dateStr.iso;
-  formData["Day"] = dateStr.day;
-  formData["Month"] = dateStr.month;
+  if (formData["Date of call"] === undefined) {
+    const now = new Date();
+    const f = formatDate(now);
+    formData["Date of call"] = f.isoValue;
+    formData["Day"] = f.day;
+    formData["Month"] = f.month;
+  }
   return `<div class="date-line">
-    <span id="dateDisplay">${dateStr.display}</span>
+    <span id="dateDisplay">${isoToDisplay(formData["Date of call"])}</span>
     <button type="button" id="editDateBtn">Not today? Edit</button>
-    <input type="date" id="dateInput" style="display:none; margin-top:6px; width:auto;">
+    <input type="date" id="dateInput" value="${formData["Date of call"]}" style="display:none; margin-top:6px; width:auto;">
   </div>`;
 }
 
@@ -551,21 +648,39 @@ function wireIdentity(savedName) {
     });
     dateInput.addEventListener("change", () => {
       if (!dateInput.value) return;
-      const d = new Date(dateInput.value + "T00:00:00");
-      const f = formatDate(d);
-      formData["Date of call"] = f.iso;
-      formData["Day"] = f.day;
-      formData["Month"] = f.month;
-      document.getElementById("dateDisplay").textContent = f.display;
+      const [y, m, d] = dateInput.value.split("-").map(Number);
+      const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+      const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      const dow = new Date(y, m - 1, d).getDay();
+      formData["Date of call"] = dateInput.value;
+      formData["Day"] = days[dow];
+      formData["Month"] = months[m - 1];
+      document.getElementById("dateDisplay").textContent = isoToDisplay(dateInput.value);
     });
   } else {
-    const input = document.getElementById("pseudonymInput");
-    input.addEventListener("change", () => {
-      const val = input.value.trim();
-      if (val) {
-        sessionStorage.setItem("volunteerName", val);
-        buildForm();
-      }
+    const searchInput = document.getElementById("pseudonymSearch");
+    const listEl = document.getElementById("pseudonymListEl");
+
+    function renderMatches(query) {
+      const q = query.trim().toLowerCase();
+      const matches = q ? pseudonymList.filter(n => n.toLowerCase().includes(q)) : pseudonymList;
+      listEl.innerHTML = matches.length
+        ? matches.map(n => `<div class="combo-item" data-value="${escapeHtml(n)}">${escapeHtml(n)}</div>`).join("")
+        : `<div class="combo-empty">No match — check spelling</div>`;
+      listEl.style.display = "block";
+    }
+
+    searchInput.addEventListener("focus", () => renderMatches(searchInput.value));
+    searchInput.addEventListener("input", () => renderMatches(searchInput.value));
+    searchInput.addEventListener("blur", () => {
+      setTimeout(() => { listEl.style.display = "none"; }, 150);
+    });
+    listEl.addEventListener("click", (e) => {
+      const item = e.target.closest(".combo-item");
+      if (!item) return;
+      const val = item.dataset.value;
+      sessionStorage.setItem("volunteerName", val);
+      buildForm();
     });
   }
 }
@@ -573,13 +688,21 @@ function wireIdentity(savedName) {
 function formatDate(d) {
   const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
   const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  const iso = d.toISOString().slice(0,10);
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
   return {
-    iso,
+    isoValue: `${yyyy}-${mm}-${dd}`,
     day: days[d.getDay()],
-    month: months[d.getMonth()],
-    display: `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
+    month: months[d.getMonth()]
   };
+}
+
+function isoToDisplay(iso) {
+  const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const [y, m, d] = iso.split("-").map(Number);
+  const dow = new Date(y, m - 1, d).getDay();
+  return `${days[dow]}, ${String(d).padStart(2,"0")}/${String(m).padStart(2,"0")}/${y}`;
 }
 
 function buildSection(title, hint, fields, isRisk) {
@@ -640,7 +763,7 @@ function renderField(container, f) {
     formData[f.key] = f.default;
   }
 
-  if (f.type === "auto" && options.length > 6 && !f.multi) {
+  if (f.type === "auto" && options.length > 6 && !f.multi && !f.forceChips) {
     // dropdown for long lists
     wrap.innerHTML = `
       <label class="field-label">${f.key}</label>
@@ -651,6 +774,11 @@ function renderField(container, f) {
     `;
     wrap.querySelector("select").addEventListener("change", (e) => {
       formData[f.key] = e.target.value;
+      if (f.key === "Type of call") {
+        cleanupFormDataForBranch();
+        buildForm();
+        return;
+      }
       renderAllConditionals();
       updateProgress();
     });
@@ -682,6 +810,11 @@ function renderField(container, f) {
         group.querySelectorAll(".chip").forEach(c => c.classList.remove("selected"));
         chip.classList.add("selected");
         formData[f.key] = chip.dataset.value;
+        if (f.key === "Type of call") {
+          cleanupFormDataForBranch();
+          buildForm();
+          return;
+        }
       }
       renderAllConditionals();
       updateProgress();
@@ -693,7 +826,7 @@ function renderField(container, f) {
    CONDITIONAL VISIBILITY
    ==================================================================== */
 function renderAllConditionals() {
-  [...RISK_FIELDS, ...WRAPUP_FIELDS].forEach(f => {
+  ALL_FIELDS.forEach(f => {
     if (!f.showIf) return;
     const wrap = document.getElementById(`field_${slug(f.key)}`);
     if (!wrap) return;
@@ -712,7 +845,7 @@ function renderAllConditionals() {
    PROGRESS BAR (rough indicator, not a strict validator)
    ==================================================================== */
 function updateProgress() {
-  const allFields = [...FIELDS, ...RISK_FIELDS, ...WRAPUP_FIELDS].filter(f => !f.optional);
+  const allFields = ALL_FIELDS.filter(f => !f.optional);
   const visible = allFields.filter(f => !f.showIf || f.showIf(formData));
   const filled = visible.filter(f => {
     const v = formData[f.key];
@@ -726,7 +859,7 @@ function updateProgress() {
    VALIDATION
    ==================================================================== */
 function getMissingFields() {
-  const allFields = [...FIELDS, ...RISK_FIELDS, ...WRAPUP_FIELDS].filter(f => !f.optional);
+  const allFields = ALL_FIELDS.filter(f => !f.optional);
   const visible = allFields.filter(f => !f.showIf || f.showIf(formData));
   return visible.filter(f => {
     const v = formData[f.key];
