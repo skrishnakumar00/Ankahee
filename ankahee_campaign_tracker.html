@@ -303,7 +303,14 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 .gh-steps { background: var(--white); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; margin-top: 8px; font-size: 12px; }
 .gh-steps ol { padding-left: 16px; line-height: 2; }
 
-/* ── RESPONSIVE ── */
+/* ── DYNAMIC COLUMN VISIBILITY ── */
+/* toggled via body class when a column is absent from the sheet */
+body.hide-priority .col-priority,
+body.hide-cat .col-cat,
+body.hide-remarks .col-remarks,
+body.hide-revised .col-revised,
+body.hide-owner .col-owner { display: none !important; }
+
 @media (max-width: 700px) {
   header { padding: 0 14px; height: 56px; }
   .hdr-refresh { display: none; }
@@ -353,10 +360,10 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 
 <!-- CONTROLS -->
 <div class="controls">
-  <span class="ctrl-label">Viewing</span>
-  <select class="ctrl-select" id="f-owner"><option value="All">All Team</option></select>
-  <span class="ctrl-label">Category</span>
-  <select class="ctrl-select" id="f-cat"><option value="All">All</option></select>
+  <span class="ctrl-label col-owner">Viewing</span>
+  <select class="ctrl-select col-owner" id="f-owner"><option value="All">All Team</option></select>
+  <span class="ctrl-label col-cat">Category</span>
+  <select class="ctrl-select col-cat" id="f-cat"><option value="All">All</option></select>
   <span class="ctrl-label">Status</span>
   <select class="ctrl-select" id="f-status">
     <option value="All">All</option>
@@ -398,7 +405,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
       <div class="kpi-bar"></div><div class="kpi-lbl">No Due Date</div>
       <div class="kpi-num" id="k-nodate">—</div><div class="kpi-hint">active, date missing</div>
     </div>
-    <div class="kpi-card kpi-noowner" onclick="openModal('noowner','')">
+    <div class="kpi-card kpi-noowner col-owner" onclick="openModal('noowner','')">
       <div class="kpi-bar"></div><div class="kpi-lbl">No Owner</div>
       <div class="kpi-num" id="k-noowner">—</div><div class="kpi-hint">nobody assigned</div>
     </div>
@@ -433,7 +440,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
   <div id="bkd-section">
     <div class="sec-label">Breakdown</div>
     <div class="breakdown-grid">
-      <div class="bkd-card">
+      <div class="bkd-card col-owner">
         <div class="bkd-hdr">By Person</div>
         <table class="bkd-table">
           <thead><tr>
@@ -443,7 +450,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
           <tbody id="bkd-person"></tbody>
         </table>
       </div>
-      <div class="bkd-card">
+      <div class="bkd-card col-cat">
         <div class="bkd-hdr">By Category</div>
         <table class="bkd-table">
           <thead><tr>
@@ -461,7 +468,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
   <div class="tbl-wrap">
     <div class="tbl-toolbar">
       <h3 id="tbl-title">All tasks</h3>
-      <select class="tbl-filter" id="f-pri" onchange="renderTaskList()">
+      <select class="tbl-filter col-priority" id="f-pri" onchange="renderTaskList()">
         <option value="All">All priorities</option>
         <option value="High">High</option>
         <option value="Medium">Medium</option>
@@ -473,9 +480,9 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
     <!-- Desktop table -->
     <div class="tbl-desktop" style="overflow-x:auto;">
       <table class="task-table">
-        <thead><tr>
-          <th>Category</th><th>Task</th><th>Owner</th>
-          <th>Due Date</th><th>Revised Date</th><th>Priority</th><th>Status</th><th>Remarks</th>
+        <thead><tr id="tbl-head-row">
+          <th class="col-cat">Category</th><th>Task</th><th class="col-owner">Owner</th>
+          <th>Due Date</th><th class="col-revised">Revised Date</th><th class="col-priority">Priority</th><th>Status</th><th class="col-remarks">Remarks</th>
         </tr></thead>
         <tbody id="tbl-body"></tbody>
       </table>
@@ -495,7 +502,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
     </div>
     <div class="modal-body">
       <table class="modal-table">
-        <thead><tr><th>Category</th><th>Task</th><th>Owner</th><th>Due Date</th><th>Priority</th><th>Status</th><th>Remarks</th></tr></thead>
+        <thead><tr><th class="col-cat">Category</th><th>Task</th><th class="col-owner">Owner</th><th>Due Date</th><th class="col-priority">Priority</th><th>Status</th><th class="col-remarks">Remarks</th></tr></thead>
         <tbody id="list-modal-body"></tbody>
       </table>
     </div>
@@ -518,8 +525,57 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 // Paste the CSV URL from File → Share → Publish to web → WSPD tab → CSV
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSxUJ2mtcQb2NeAEDntqCYPKsbkiSd8LYqiGEEpbp4nfnDnOIpVu0iZhtD0NMxDcrUBfrNmsRMcc3vl/pub?gid=0&single=true&output=csv';
 
-// Sheet columns (0-based): Sr No | Category | Task | Priority | Owner | Due Date | Revised Due Date | Status | Remarks
-const COL = { srno:0, cat:1, task:2, priority:3, owner:4, due:5, revised:6, status:7, remarks:8 };
+// Column detection is dynamic — based on header text in Row 1 of the sheet,
+// not fixed position. This means adding, removing, or reordering columns
+// in the sheet will NOT break the dashboard. Only renaming a header would
+// require updating the alias list below.
+const FIELD_ALIASES = {
+  srno:     ['sr no','sr. no','s.no','sl no','sr.no'],
+  cat:      ['category'],
+  task:     ['task','task description','actionable'],
+  priority: ['priority'],
+  owner:    ['owner','responsibility','responsible'],
+  due:      ['due date'],
+  revised:  ['revised due date','revised date'],
+  status:   ['status'],
+  remarks:  ['remarks','notes'],
+};
+let COL = {};   // field -> column index (or -1 if absent)
+let HAS = {};   // field -> boolean, whether column exists in the sheet
+let EXTRA = [];  // any sheet columns not in the known field list: [{label, idx}]
+
+function detectColumns(headerCells) {
+  const headers = headerCells.map(h => (h||'').trim().toLowerCase());
+  const col = {};
+  for (const field in FIELD_ALIASES) {
+    const aliases = FIELD_ALIASES[field];
+    col[field] = headers.findIndex(h => aliases.includes(h));
+  }
+  return col;
+}
+
+// Any header not matched to a known field is treated as a dynamic extra
+// column and shown as-is (in sheet order) at the end of the All Tasks table.
+function detectExtraColumns(headerCells, col) {
+  const knownIdx = new Set(Object.values(col).filter(i => i >= 0));
+  const extras = [];
+  headerCells.forEach((h, i) => {
+    const label = (h||'').trim();
+    if (!label) return;
+    if (knownIdx.has(i)) return;
+    extras.push({ label, idx: i });
+  });
+  return extras;
+}
+
+function applyColumnVisibility() {
+  const body = document.body;
+  body.classList.toggle('hide-priority', !HAS.priority);
+  body.classList.toggle('hide-cat',      !HAS.cat);
+  body.classList.toggle('hide-remarks',  !HAS.remarks);
+  body.classList.toggle('hide-revised',  !HAS.revised);
+  body.classList.toggle('hide-owner',    !HAS.owner);
+}
 
 // ── STATE ────────────────────────────────────────────────────────────────────
 let ALL = [];
@@ -566,23 +622,61 @@ async function loadData() {
 // ── CSV ──────────────────────────────────────────────────────────────────────
 function parseCSV(text) {
   const lines = text.trim().split('\n');
+  if (lines.length === 0) return [];
+
+  // Row 1 = headers → detect column positions by name
+  const headerCells = splitLine(lines[0]);
+  COL = detectColumns(headerCells);
+  EXTRA = detectExtraColumns(headerCells, COL);
+  HAS = {
+    cat:      COL.cat      >= 0,
+    task:     COL.task     >= 0,
+    priority: COL.priority >= 0,
+    owner:    COL.owner    >= 0,
+    due:      COL.due      >= 0,
+    revised:  COL.revised  >= 0,
+    status:   COL.status   >= 0,
+    remarks:  COL.remarks  >= 0,
+  };
+  applyColumnVisibility();
+  renderExtraHeaders();
+
+  const get = (cells, field) => COL[field] >= 0 ? (cells[COL[field]]||'').trim() : '';
+
   const rows = [];
   for (let i = 1; i < lines.length; i++) {
     const c = splitLine(lines[i]);
-    const task = c[COL.task]?.trim();
+    const task = HAS.task ? get(c,'task') : '';
     if (!task) continue;
+    const extraVals = EXTRA.map(ex => (c[ex.idx]||'').trim());
     rows.push({
-      cat:      c[COL.cat]?.trim()      || '',
+      cat:      get(c,'cat'),
       task,
-      priority: c[COL.priority]?.trim() || '',
-      owner:    c[COL.owner]?.trim()    || '',
-      due:      toDate(c[COL.due]?.trim()),
-      revised:  toDate(c[COL.revised]?.trim()),
-      status:   c[COL.status]?.trim()   || 'Pending',
-      remarks:  c[COL.remarks]?.trim()  || '',
+      priority: get(c,'priority'),
+      owner:    get(c,'owner'),
+      due:      toDate(get(c,'due')),
+      revised:  toDate(get(c,'revised')),
+      status:   get(c,'status') || 'Pending',
+      remarks:  get(c,'remarks'),
+      extraVals,
     });
   }
   return rows;
+}
+
+// Adds a <th> to the All Tasks table header for each unrecognized sheet
+// column, so new columns you add show up automatically without a recode.
+function renderExtraHeaders() {
+  const headRow = document.getElementById('tbl-head-row');
+  if (!headRow) return;
+  // remove previously injected extra headers before re-adding
+  headRow.querySelectorAll('.col-extra').forEach(el => el.remove());
+  EXTRA.forEach(ex => {
+    const th = document.createElement('th');
+    th.className = 'col-extra';
+    th.textContent = ex.label;
+    headRow.appendChild(th);
+  });
 }
 
 function splitLine(line) {
@@ -623,11 +717,13 @@ function isOverdue(t) {
 }
 
 function isNoDate(t) {
+  if (!HAS.due) return false;
   if (t.status === 'Done') return false;
   return !t.due || isNaN(t.due);
 }
 
 function isNoOwner(t) {
+  if (!HAS.owner) return false;
   if (t.status === 'Done') return false;
   return !t.owner;
 }
@@ -683,6 +779,9 @@ function renderKPIs(tasks) {
   document.getElementById('k-noowner').textContent = tasks.filter(isNoOwner).length;
 }
 
+// joins non-empty parts with " · ", skipping blanks so missing fields don't leave stray dots
+function metaParts(...parts) { return parts.filter(Boolean).join(' · '); }
+
 // ── EXCEPTIONS ───────────────────────────────────────────────────────────────
 function renderExceptions(tasks) {
   // Overdue
@@ -699,10 +798,12 @@ function renderExceptions(tasks) {
           <div class="exc-info">
             <div class="exc-task">${esc(t.task)}</div>
             <div class="exc-meta">
-              <span class="exc-owner-name">${t.owner||'—'}</span> ·
-              ${esc(t.cat)} ·
-              <span class="exc-days">${days}d overdue</span> ·
-              <span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span>
+              ${metaParts(
+                HAS.owner ? `<span class="exc-owner-name">${esc(t.owner)||'—'}</span>` : '',
+                HAS.cat ? esc(t.cat) : '',
+                `<span class="exc-days">${days}d overdue</span>`,
+                HAS.priority ? `<span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span>` : ''
+              )}
             </div>
           </div>
         </div>`;
@@ -728,7 +829,11 @@ function renderExceptions(tasks) {
       <div class="exc-dot"></div>
       <div class="exc-info">
         <div class="exc-task">${esc(t.task)}</div>
-        <div class="exc-meta">${esc(t.cat)} · ${t.due ? fmt(t.due) : '<span style="color:var(--amber)">no date either</span>'} · <span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span></div>
+        <div class="exc-meta">${metaParts(
+          HAS.cat ? esc(t.cat) : '',
+          HAS.due ? (t.due ? fmt(t.due) : '<span style="color:var(--amber)">no date either</span>') : '',
+          HAS.priority ? `<span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span>` : ''
+        )}</div>
       </div>
     </div>`).join('');
   }
@@ -739,7 +844,11 @@ function renderExceptions(tasks) {
       <div class="exc-dot"></div>
       <div class="exc-info">
         <div class="exc-task">${esc(t.task)}</div>
-        <div class="exc-meta"><span class="exc-owner-name">${esc(t.owner)}</span> · ${esc(t.cat)} · <span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span></div>
+        <div class="exc-meta">${metaParts(
+          HAS.owner ? `<span class="exc-owner-name">${esc(t.owner)}</span>` : '',
+          HAS.cat ? esc(t.cat) : '',
+          HAS.priority ? `<span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span>` : ''
+        )}</div>
       </div>
     </div>`).join('');
   }
@@ -817,7 +926,7 @@ function renderTaskList() {
   // Desktop table
   const tb = document.getElementById('tbl-body');
   if (tasks.length===0) {
-    tb.innerHTML = `<tr><td colspan="8"><div class="empty-state">No tasks match the current filters.</div></td></tr>`;
+    tb.innerHTML = `<tr><td colspan="${8+EXTRA.length}"><div class="empty-state">No tasks match the current filters.</div></td></tr>`;
   } else {
     tb.innerHTML = tasks.map(t => {
       const over = isOverdue(t);
@@ -827,19 +936,21 @@ function renderTaskList() {
       const days = (over&&ed) ? Math.floor((TODAY-ed)/86400000) : 0;
       const dueTxt = t.due && !isNaN(t.due) ? fmt(t.due) : `<span style="color:var(--amber);font-weight:600">No date</span>`;
       const revTxt = t.revised && !isNaN(t.revised) ? fmt(t.revised) : '—';
+      const extraCells = t.extraVals.map(v => `<td class="col-extra">${esc(v)||'—'}</td>`).join('');
       return `<tr class="${over?'row-overdue':''}">
-        <td class="td-cat">${esc(t.cat)||'—'}</td>
+        <td class="td-cat col-cat">${esc(t.cat)||'—'}</td>
         <td class="td-task">${esc(t.task)}
           ${over  ? `<span class="tag-overdue">${days}d</span>` : ''}
           ${nodt  ? `<span class="tag-nodate">no date</span>` : ''}
           ${nown  ? `<span class="tag-noowner">no owner</span>` : ''}
         </td>
-        <td class="td-owner">${esc(t.owner)||'<span style="color:var(--amber)">—</span>'}</td>
+        <td class="td-owner col-owner">${esc(t.owner)||'<span style="color:var(--amber)">—</span>'}</td>
         <td class="td-date">${dueTxt}</td>
-        <td class="td-rev">${revTxt}</td>
-        <td><span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span></td>
+        <td class="td-rev col-revised">${revTxt}</td>
+        <td class="col-priority"><span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span></td>
         <td><span class="status-pill sp-${t.status}"><span class="s-dot"></span>${t.status}</span></td>
-        <td class="td-rem">${esc(t.remarks)||'—'}</td>
+        <td class="td-rem col-remarks">${esc(t.remarks)||'—'}</td>
+        ${extraCells}
       </tr>`;
     }).join('');
   }
@@ -860,10 +971,10 @@ function renderTaskList() {
           <span class="status-pill sp-${t.status}"><span class="s-dot"></span>${t.status}</span>
         </div>
         <div class="tc-meta">
-          <span class="tc-cat">${esc(t.cat)||'—'}</span>
-          <span class="tc-owner">${esc(t.owner)||'No owner'}</span>
+          <span class="tc-cat col-cat">${esc(t.cat)||'—'}</span>
+          <span class="tc-owner col-owner">${esc(t.owner)||'No owner'}</span>
           <span class="tc-date">${dateStr}</span>
-          <span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span>
+          <span class="pri-pill pr-${t.priority} col-priority">${t.priority||'—'}</span>
         </div>
       </div>`;
     }).join('');
@@ -880,14 +991,18 @@ function openDetailModal(idx) {
   const ed = effDate(t);
   const over = isOverdue(t);
   const days = (over&&ed) ? Math.floor((TODAY-ed)/86400000) : 0;
+  const extraRows = (t.extraVals||[]).map((v,i) =>
+    `<div class="detail-row"><div class="detail-lbl">${esc(EXTRA[i].label)}</div><div class="detail-val">${esc(v)||'—'}</div></div>`
+  ).join('');
   document.getElementById('detail-modal-body').innerHTML = `
-    <div class="detail-row"><div class="detail-lbl">Category</div><div class="detail-val td-cat">${esc(t.cat)||'—'}</div></div>
-    <div class="detail-row"><div class="detail-lbl">Owner</div><div class="detail-val td-owner">${esc(t.owner)||'<span style="color:var(--amber)">Not assigned</span>'}</div></div>
+    <div class="detail-row col-cat"><div class="detail-lbl">Category</div><div class="detail-val td-cat">${esc(t.cat)||'—'}</div></div>
+    <div class="detail-row col-owner"><div class="detail-lbl">Owner</div><div class="detail-val td-owner">${esc(t.owner)||'<span style="color:var(--amber)">Not assigned</span>'}</div></div>
     <div class="detail-row"><div class="detail-lbl">Due Date</div><div class="detail-val">${t.due&&!isNaN(t.due)?fmt(t.due):'<span style="color:var(--amber)">Not set</span>'}${over?`<span class="tag-overdue">${days}d overdue</span>`:''}</div></div>
-    <div class="detail-row"><div class="detail-lbl">Revised Date</div><div class="detail-val td-rev">${t.revised&&!isNaN(t.revised)?fmt(t.revised):'—'}</div></div>
-    <div class="detail-row"><div class="detail-lbl">Priority</div><div class="detail-val"><span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span></div></div>
+    <div class="detail-row col-revised"><div class="detail-lbl">Revised Date</div><div class="detail-val td-rev">${t.revised&&!isNaN(t.revised)?fmt(t.revised):'—'}</div></div>
+    <div class="detail-row col-priority"><div class="detail-lbl">Priority</div><div class="detail-val"><span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span></div></div>
     <div class="detail-row"><div class="detail-lbl">Status</div><div class="detail-val"><span class="status-pill sp-${t.status}"><span class="s-dot"></span>${t.status}</span></div></div>
-    <div class="detail-row"><div class="detail-lbl">Remarks</div><div class="detail-val td-rem">${esc(t.remarks)||'—'}</div></div>
+    <div class="detail-row col-remarks"><div class="detail-lbl">Remarks</div><div class="detail-val td-rem">${esc(t.remarks)||'—'}</div></div>
+    ${extraRows}
   `;
   document.getElementById('detail-modal').classList.add('open');
 }
@@ -918,13 +1033,13 @@ function openModal(type, rawKey) {
         const over=isOverdue(t); const ed=effDate(t);
         const days=(over&&ed)?Math.floor((TODAY-ed)/86400000):0;
         return `<tr>
-          <td class="td-cat">${esc(t.cat)||'—'}</td>
+          <td class="td-cat col-cat">${esc(t.cat)||'—'}</td>
           <td class="td-task">${esc(t.task)}${over?`<span class="tag-overdue">${days}d</span>`:''}</td>
-          <td class="td-owner">${esc(t.owner)||'—'}</td>
+          <td class="td-owner col-owner">${esc(t.owner)||'—'}</td>
           <td class="td-date">${fmt(effDate(t))}</td>
-          <td><span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span></td>
+          <td class="col-priority"><span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span></td>
           <td><span class="status-pill sp-${t.status}"><span class="s-dot"></span>${t.status}</span></td>
-          <td class="td-rem">${esc(t.remarks)||'—'}</td>
+          <td class="td-rem col-remarks">${esc(t.remarks)||'—'}</td>
         </tr>`;
       }).join('');
 
