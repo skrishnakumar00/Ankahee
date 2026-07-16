@@ -620,12 +620,41 @@ async function loadData() {
 }
 
 // ── CSV ──────────────────────────────────────────────────────────────────────
+// Proper CSV tokenizer — reads character by character so that newlines
+// INSIDE quoted fields (e.g. multi-line Remarks entered with Ctrl+Enter in
+// Google Sheets) are preserved as part of the cell, not mistaken for a new row.
+function tokenizeCSV(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i+1] === '"') { field += '"'; i++; }
+        else { inQuotes = false; }
+      } else {
+        field += ch;
+      }
+    } else {
+      if (ch === '"') { inQuotes = true; }
+      else if (ch === ',') { row.push(field); field = ''; }
+      else if (ch === '\r') { /* ignore, \n handles the break */ }
+      else if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else { field += ch; }
+    }
+  }
+  if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row); }
+  return rows;
+}
+
 function parseCSV(text) {
-  const lines = text.trim().split('\n');
-  if (lines.length === 0) return [];
+  const rows = tokenizeCSV(text.trim());
+  if (rows.length === 0) return [];
 
   // Row 1 = headers → detect column positions by name
-  const headerCells = splitLine(lines[0]);
+  const headerCells = rows[0];
   COL = detectColumns(headerCells);
   EXTRA = detectExtraColumns(headerCells, COL);
   HAS = {
@@ -643,13 +672,13 @@ function parseCSV(text) {
 
   const get = (cells, field) => COL[field] >= 0 ? (cells[COL[field]]||'').trim() : '';
 
-  const rows = [];
-  for (let i = 1; i < lines.length; i++) {
-    const c = splitLine(lines[i]);
+  const out = [];
+  for (let i = 1; i < rows.length; i++) {
+    const c = rows[i];
     const task = HAS.task ? get(c,'task') : '';
     if (!task) continue;
     const extraVals = EXTRA.map(ex => (c[ex.idx]||'').trim());
-    rows.push({
+    out.push({
       cat:      get(c,'cat'),
       task,
       priority: get(c,'priority'),
@@ -661,7 +690,7 @@ function parseCSV(text) {
       extraVals,
     });
   }
-  return rows;
+  return out;
 }
 
 // Adds a <th> to the All Tasks table header for each unrecognized sheet
@@ -936,7 +965,7 @@ function renderTaskList() {
       const days = (over&&ed) ? Math.floor((TODAY-ed)/86400000) : 0;
       const dueTxt = t.due && !isNaN(t.due) ? fmt(t.due) : `<span style="color:var(--amber);font-weight:600">No date</span>`;
       const revTxt = t.revised && !isNaN(t.revised) ? fmt(t.revised) : '—';
-      const extraCells = t.extraVals.map(v => `<td class="col-extra">${esc(v)||'—'}</td>`).join('');
+      const extraCells = t.extraVals.map(v => `<td class="col-extra">${escNl(v)||'—'}</td>`).join('');
       return `<tr class="${over?'row-overdue':''}">
         <td class="td-cat col-cat">${esc(t.cat)||'—'}</td>
         <td class="td-task">${esc(t.task)}
@@ -949,7 +978,7 @@ function renderTaskList() {
         <td class="td-rev col-revised">${revTxt}</td>
         <td class="col-priority"><span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span></td>
         <td><span class="status-pill sp-${t.status}"><span class="s-dot"></span>${t.status}</span></td>
-        <td class="td-rem col-remarks">${esc(t.remarks)||'—'}</td>
+        <td class="td-rem col-remarks">${escNl(t.remarks)||'—'}</td>
         ${extraCells}
       </tr>`;
     }).join('');
@@ -1001,7 +1030,7 @@ function openDetailModal(idx) {
     <div class="detail-row col-revised"><div class="detail-lbl">Revised Date</div><div class="detail-val td-rev">${t.revised&&!isNaN(t.revised)?fmt(t.revised):'—'}</div></div>
     <div class="detail-row col-priority"><div class="detail-lbl">Priority</div><div class="detail-val"><span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span></div></div>
     <div class="detail-row"><div class="detail-lbl">Status</div><div class="detail-val"><span class="status-pill sp-${t.status}"><span class="s-dot"></span>${t.status}</span></div></div>
-    <div class="detail-row col-remarks"><div class="detail-lbl">Remarks</div><div class="detail-val td-rem">${esc(t.remarks)||'—'}</div></div>
+    <div class="detail-row col-remarks"><div class="detail-lbl">Remarks</div><div class="detail-val td-rem">${escNl(t.remarks)||'—'}</div></div>
     ${extraRows}
   `;
   document.getElementById('detail-modal').classList.add('open');
@@ -1039,7 +1068,7 @@ function openModal(type, rawKey) {
           <td class="td-date">${fmt(effDate(t))}</td>
           <td class="col-priority"><span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span></td>
           <td><span class="status-pill sp-${t.status}"><span class="s-dot"></span>${t.status}</span></td>
-          <td class="td-rem col-remarks">${esc(t.remarks)||'—'}</td>
+          <td class="td-rem col-remarks">${escNl(t.remarks)||'—'}</td>
         </tr>`;
       }).join('');
 
@@ -1055,6 +1084,9 @@ function esc(s) {
   if (!s) return '';
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+// Escapes text AND converts embedded line breaks (e.g. multi-line Remarks
+// entered with Ctrl+Enter in Sheets) into visible <br> tags.
+function escNl(s) { return esc(s).replace(/\n/g, '<br>'); }
 
 function showError() {
   const b = document.getElementById('error-banner');
