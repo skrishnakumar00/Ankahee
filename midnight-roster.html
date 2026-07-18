@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Midnight Roster — Ankahee</title>
+<style>
+  :root {
+    --bg: #FAF6F2;
+    --surface: #FFFFFF;
+    --surface-soft: #F3EEE8;
+    --primary: #5B4B7C;
+    --primary-dark: #443A5E;
+    --primary-soft: #EDE8F3;
+    --success: #4F8A6D;
+    --success-soft: #E7F1EB;
+    --risk: #B8524A;
+    --risk-soft: #F7E9E7;
+    --text: #2E2A33;
+    --text-muted: #7A7480;
+    --border: #E4DDD6;
+    --radius: 14px;
+    --radius-sm: 10px;
+    --shadow: 0 2px 10px rgba(46, 42, 51, 0.06);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: 60px;
+  }
+
+  .topbar { position: sticky; top: 0; z-index: 10; background: var(--surface); border-bottom: 1px solid var(--border); padding: 12px 20px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 12px; }
+  .topbar img { height: 32px; width: 32px; object-fit: contain; border-radius: 8px; flex-shrink: 0; }
+  .topbar .titles { flex: 1; }
+  .topbar h1 { margin: 0; font-size: 18px; color: var(--primary-dark); }
+  .topbar p { margin: 2px 0 0; font-size: 13px; color: var(--text-muted); }
+  .icon-btn {
+    width: 40px; height: 40px; border-radius: 999px; border: 1.5px solid var(--border);
+    background: var(--surface); color: var(--primary); font-size: 16px; font-weight: 700;
+    cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  }
+  .icon-btn:active { background: var(--primary-soft); }
+
+  .identity-select { padding: 16px 20px 4px; }
+  .identity-select label { font-size: 14px; color: var(--text-muted); display: block; margin-bottom: 8px; }
+  .identity-select select {
+    width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); font-size: 16px; background: var(--surface); color: var(--text);
+  }
+  .identity-select .btn { width: 100%; margin-top: 12px; }
+  .identity-select .err { color: var(--risk); font-size: 13px; margin-top: 8px; display: none; }
+
+  .identity-bar {
+    background: var(--primary-soft); padding: 12px 20px; font-size: 14px; color: var(--primary-dark);
+    display: none; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  }
+  .identity-bar button {
+    background: none; border: none; color: var(--primary); font-size: 13px;
+    text-decoration: underline; cursor: pointer; padding: 4px;
+  }
+
+  main { padding: 16px; max-width: 640px; margin: 0 auto; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-muted); margin-bottom: 14px; padding: 0 4px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend .dot { width: 10px; height: 10px; border-radius: 4px; display: inline-block; }
+
+  .toolbar-row { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+  .refresh-btn {
+    display: inline-flex; align-items: center; gap: 6px; background: none; border: none;
+    color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer; padding: 8px 4px;
+  }
+  .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .refresh-btn svg { transition: transform 0.4s ease; }
+  .refresh-btn.spinning svg { animation: spin 0.6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .month-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+  .month-tab {
+    flex: 1; text-align: center; padding: 10px 6px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-muted);
+    font-size: 14px; font-weight: 600; cursor: pointer; min-height: 44px;
+  }
+  .month-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  .month-summary { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; padding: 0 4px; flex-wrap: wrap; gap: 6px; }
+  .month-summary h2 { font-size: 15px; margin: 0; color: var(--primary-dark); }
+  .month-summary .count { font-size: 13px; color: var(--text-muted); }
+
+  .calendar-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px; }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+  .cal-weekday { font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted); text-align: center; padding-bottom: 6px; }
+
+  .cal-cell {
+    min-height: 62px; border-radius: var(--radius-sm); padding: 5px 3px;
+    display: flex; flex-direction: column; gap: 2px;
+    border: 1.5px dashed var(--border); background: var(--surface); cursor: pointer;
+  }
+  .cal-cell.empty { visibility: hidden; cursor: default; border: none; }
+  .cal-cell .day-num { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1; }
+  .cal-cell .names { font-size: 11px; line-height: 1.25; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; }
+  .cal-cell .badge { font-size: 10px; opacity: 0.85; }
+
+  .cal-cell.filled { border: none; background: var(--primary-soft); }
+  .cal-cell.filled .day-num, .cal-cell.filled .names { color: var(--primary-dark); }
+
+  .cal-cell.self { border: none; background: var(--primary-dark); }
+  .cal-cell.self .day-num, .cal-cell.self .names { color: #fff; }
+
+  .cal-cell.prelaunch, .cal-cell.past { opacity: 0.42; cursor: default; }
+
+  .overlay { position: fixed; inset: 0; background: rgba(46,42,51,0.4); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
+  .overlay.hidden { display: none; }
+  .sheet { background: var(--surface); border-radius: 14px 14px 0 0; padding: 20px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
+  @media (min-width: 520px) { .overlay { align-items: center; } .sheet { border-radius: var(--radius); } }
+  .sheet h3 { margin: 0 0 8px; font-size: 17px; color: var(--text); }
+  .sheet p { margin: 0 0 16px; font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+  .sheet-actions { display: flex; flex-direction: column; gap: 10px; }
+  .sheet label { font-size: 13px; color: var(--text-muted); display: block; margin: 12px 0 6px; }
+  .sheet select {
+    width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); font-size: 16px; background: var(--surface); color: var(--text);
+  }
+  .sheet .subnote { font-size: 12px; color: var(--text-muted); margin-top: -2px; margin-bottom: 4px; }
+
+  .btn { border: none; border-radius: 999px; padding: 0 20px; height: 48px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:active { background: var(--primary-dark); }
+  .btn-secondary { background: var(--surface); color: var(--primary); border: 1.5px solid var(--border); }
+  .btn-risk { background: var(--risk); color: #fff; }
+  .btn-text { background: none; color: var(--text-muted); text-decoration: underline; height: auto; padding: 8px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--success); color: #fff; padding: 14px 20px; border-radius: 12px;
+    display: flex; align-items: center; gap: 10px; font-size: 14px; box-shadow: var(--shadow);
+    opacity: 0; transition: opacity 0.25s ease, transform 0.25s ease; z-index: 60; max-width: 90%;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--risk); }
+  .check { stroke-dasharray: 20; stroke-dashoffset: 20; animation: draw 0.4s ease forwards 0.1s; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+
+  .loading { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <img src="Logo.png" alt="Ankahee logo" onerror="this.style.display='none'">
+  <div class="titles">
+    <h1>Midnight Roster</h1>
+    <p>10pm – 12am shift · pick your dates</p>
+  </div>
+  <button class="icon-btn" id="helpBtn" aria-label="How this works">?</button>
+</header>
+
+<div id="identitySelectWrap" class="identity-select" style="display:none;">
+  <label for="volunteerSelect">Who's this?</label>
+  <select id="volunteerSelect">
+    <option value="">Select your name</option>
+  </select>
+  <button class="btn btn-primary" id="identityContinueBtn">Continue</button>
+  <p class="err" id="identityError">Please select your name to continue.</p>
+</div>
+
+<div id="identityBar" class="identity-bar">
+  <span>Logging as: <strong id="identityName"></strong></span>
+  <button id="identityChangeBtn">Not you?</button>
+</div>
+
+<main>
+  <div class="legend">
+    <span><span class="dot" style="background:transparent;border:1.5px dashed var(--primary);"></span>Open</span>
+    <span><span class="dot" style="background:var(--primary-soft);"></span>Filled</span>
+    <span><span class="dot" style="background:var(--primary-dark);"></span>You</span>
+  </div>
+
+  <div class="toolbar-row">
+    <button class="refresh-btn" id="refreshBtn">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2v3.5H10" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Refresh
+    </button>
+  </div>
+  <div id="monthTabs" class="month-tabs"></div>
+  <div id="monthSummary" class="month-summary"></div>
+  <div id="content" class="loading">Loading roster…</div>
+</main>
+
+<div id="overlay" class="overlay hidden">
+  <div class="sheet" id="sheetContent"></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  const APP_URL = 'https://script.google.com/macros/s/AKfycbw2vU4QBqcU5m0PzmGyuYjgcF02m-5NDJQnioRTlZadhNXwWTTKpYxV6rRKTkMoRq8/exec';
+  const NAME_KEY = 'ankahee_volunteer_name';
+  const LAUNCH_DATE = '2026-09-10'; // hardcoded start date for the shift
+  const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  let volunteers = [];
+  let roster = [];
+  let currentVolunteer = sessionStorage.getItem(NAME_KEY) || '';
+  let activeMonthIndex = 0;
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function toDateStr(y, m, d) { return `${y}-${pad(m)}-${pad(d)}`; }
+  function todayStr() { const n = new Date(); return toDateStr(n.getFullYear(), n.getMonth() + 1, n.getDate()); }
+  function sameName(a, b) { return String(a).trim().toLowerCase() === String(b).trim().toLowerCase(); }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function formatLabel(dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dt = new Date(y, m - 1, d);
+    const weekday = dt.toLocaleDateString('en-IN', { weekday: 'short' });
+    const month = dt.toLocaleDateString('en-IN', { month: 'short' });
+    return `${weekday}, ${d} ${month}`;
+  }
+
+  function monthList() {
+    const today = new Date();
+    const [ly, lm] = LAUNCH_DATE.split('-').map(Number);
+    const launch = new Date(ly, lm - 1, 1);
+    // Anchor to whichever is later: today's month, or the shift's launch
+    // month, so pre-launch the view starts at September instead of
+    // showing empty earlier months.
+    const anchor = today > launch ? today : launch;
+    const months = [];
+    for (let i = 0; i < 3; i++) {
+      const dt = new Date(anchor.getFullYear(), anchor.getMonth() + i, 1);
+      months.push({ year: dt.getFullYear(), month: dt.getMonth() + 1 });
+    }
+    return months;
+  }
+
+  function daysInMonth(y, m) { return new Date(y, m, 0).getDate(); }
+
+  async function loadData() {
+    try {
+      const res = await fetch(APP_URL);
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Failed to load');
+      volunteers = json.data.volunteers;
+      roster = json.data.roster;
+      populateVolunteerSelect();
+      renderIdentity();
+      renderTabs();
+      renderCalendar();
+    } catch (err) {
+      document.getElementById('content').innerHTML =
+        `<div class="loading">Couldn't load the roster. Check your connection and reload the page.</div>`;
+    }
+  }
+
+  function populateVolunteerSelect() {
+    const sel = document.getElementById('volunteerSelect');
+    sel.innerHTML = '<option value="">Select your name</option>' +
+      volunteers.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+  }
+
+  function renderIdentity() {
+    const bar = document.getElementById('identityBar');
+    const selWrap = document.getElementById('identitySelectWrap');
+    if (currentVolunteer) {
+      bar.style.display = 'flex';
+      selWrap.style.display = 'none';
+      document.getElementById('identityName').textContent = currentVolunteer;
+    } else {
+      bar.style.display = 'none';
+      selWrap.style.display = 'block';
+    }
+  }
+
+  document.getElementById('identityContinueBtn').addEventListener('click', () => {
+    const sel = document.getElementById('volunteerSelect');
+    const err = document.getElementById('identityError');
+    if (!sel.value) { err.style.display = 'block'; sel.focus(); return; }
+    err.style.display = 'none';
+    currentVolunteer = sel.value;
+    sessionStorage.setItem(NAME_KEY, currentVolunteer);
+    renderIdentity();
+    renderCalendar();
+  });
+
+  document.getElementById('identityChangeBtn').addEventListener('click', () => {
+    currentVolunteer = '';
+    sessionStorage.removeItem(NAME_KEY);
+    renderIdentity();
+    renderCalendar();
+  });
+
+  // ---------- TABS ----------
+  function renderTabs() {
+    const months = monthList();
+    const wrap = document.getElementById('monthTabs');
+    wrap.innerHTML = months.map(({ year, month }, i) => {
+      const label = new Date(year, month - 1, 1).toLocaleDateString('en-IN', { month: 'short' });
+      return `<button class="month-tab ${i === activeMonthIndex ? 'active' : ''}" data-idx="${i}">${label}</button>`;
+    }).join('');
+    wrap.querySelectorAll('.month-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeMonthIndex = parseInt(btn.dataset.idx, 10);
+        renderTabs();
+        renderCalendar();
+      });
+    });
+  }
+
+  // ---------- CALENDAR ----------
+  function claimsForDate(dateStr) { return roster.filter(r => r.date === dateStr); }
+
+  function renderCalendar() {
+    const { year, month } = monthList()[activeMonthIndex];
+    const today = todayStr();
+    const dim = daysInMonth(year, month);
+
+    let filled = 0, total = 0;
+    for (let d = 1; d <= dim; d++) {
+      const dateStr = toDateStr(year, month, d);
+      if (dateStr < LAUNCH_DATE) continue;
+      total++;
+      if (claimsForDate(dateStr).length > 0) filled++;
+    }
+
+    const monthName = new Date(year, month - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+    document.getElementById('monthSummary').innerHTML =
+      `<h2>${monthName}</h2><span class="count">${filled} of ${total} days covered</span>`;
+
+    const firstDow = new Date(year, month - 1, 1).getDay();
+    let cellsHtml = WEEKDAY_LABELS.map(w => `<div class="cal-weekday">${w}</div>`).join('');
+    for (let i = 0; i < firstDow; i++) cellsHtml += `<div class="cal-cell empty"></div>`;
+
+    for (let d = 1; d <= dim; d++) {
+      const dateStr = toDateStr(year, month, d);
+      const isPrelaunch = dateStr < LAUNCH_DATE;
+      const isPast = !isPrelaunch && dateStr < today;
+      const claims = claimsForDate(dateStr);
+      const isSelf = currentVolunteer && claims.some(c => sameName(c.volunteer, currentVolunteer));
+
+      let cls = 'cal-cell';
+      if (isPrelaunch) cls += ' prelaunch';
+      else if (isPast) cls += ' past';
+      else if (isSelf) cls += ' self';
+      else if (claims.length > 0) cls += ' filled';
+
+      let namesHtml = '';
+      let titleAttr = '';
+      if (!isPrelaunch) {
+        if (claims.length === 0) {
+          namesHtml = `<div class="names">Open</div>`;
+        } else {
+          const allNames = claims.map(c => c.volunteer).join(', ');
+          titleAttr = `title="${escapeHtml(allNames)}"`;
+          const first = claims.find(c => isSelf && sameName(c.volunteer, currentVolunteer)) || claims[0];
+          const extra = claims.length - 1;
+          namesHtml = `<div class="names">${escapeHtml(first.volunteer)}${extra > 0 ? `<span class="badge"> +${extra}</span>` : ''}</div>`;
+        }
+      }
+
+      const clickable = !isPrelaunch && !isPast;
+      cellsHtml += `<div class="${cls}" ${clickable ? `data-date="${dateStr}"` : ''} ${titleAttr}>
+        <div class="day-num">${d}</div>
+        ${namesHtml}
+      </div>`;
+    }
+
+    document.getElementById('content').className = '';
+    document.getElementById('content').innerHTML = `<div class="calendar-card"><div class="calendar-grid">${cellsHtml}</div></div>`;
+
+    document.querySelectorAll('.cal-cell[data-date]').forEach(el => {
+      el.addEventListener('click', () => onDateTap(el.dataset.date));
+    });
+  }
+
+  // ---------- DATE TAP ----------
+  function onDateTap(dateStr) {
+    const claims = claimsForDate(dateStr);
+    const selfClaim = currentVolunteer && claims.find(c => sameName(c.volunteer, currentVolunteer));
+
+    if (!currentVolunteer) {
+      const who = claims.length ? claims.map(c => escapeHtml(c.volunteer)).join(', ') : 'No one yet — open';
+      showSheet(`
+        <h3>${formatLabel(dateStr)}</h3>
+        <p>${who}</p>
+        <p style="margin-top:-8px;">Select your name above to claim or manage a date.</p>
+        <div class="sheet-actions"><button class="btn btn-text" id="cancelSheetBtn">Close</button></div>
+      `);
+      bindCancel();
+      return;
+    }
+
+    if (!selfClaim) {
+      const others = claims.length ? `<p>Already on this date: ${claims.map(c => escapeHtml(c.volunteer)).join(', ')}</p>` : '';
+      showSheet(`
+        <h3>Claim ${formatLabel(dateStr)}?</h3>
+        ${others}
+        <p>You'll be added as a volunteer for this date.</p>
+        <div class="sheet-actions">
+          <button class="btn btn-primary" id="confirmClaimBtn">Claim this date</button>
+          <button class="btn btn-text" id="cancelSheetBtn">Cancel</button>
+        </div>
+      `);
+      document.getElementById('confirmClaimBtn').addEventListener('click', async () => {
+        closeSheet();
+        await doClaim(dateStr);
+      });
+      bindCancel();
+      return;
+    }
+
+    // Self is on this date: offer swap / replace / delete
+    const othersHere = claims.filter(c => !sameName(c.volunteer, currentVolunteer));
+    const alsoOn = othersHere.length ? `<p>Also on this date: ${othersHere.map(c => escapeHtml(c.volunteer)).join(', ')}</p>` : '';
+    showSheet(`
+      <h3>${formatLabel(dateStr)}</h3>
+      ${alsoOn || '<p>This is your date.</p>'}
+      <div class="sheet-actions">
+        <button class="btn btn-secondary" id="swapBtn">Swap with another volunteer</button>
+        <button class="btn btn-secondary" id="replaceBtn">Replace with another volunteer</button>
+        <button class="btn btn-risk" id="deleteBtn">Remove myself (date goes open)</button>
+        <button class="btn btn-text" id="cancelSheetBtn">Cancel</button>
+      </div>
+    `);
+    document.getElementById('swapBtn').addEventListener('click', () => openSwapForm(dateStr));
+    document.getElementById('replaceBtn').addEventListener('click', () => openReplaceForm(dateStr, claims));
+    document.getElementById('deleteBtn').addEventListener('click', () => openDeleteConfirm(dateStr));
+    bindCancel();
+  }
+
+  function bindCancel() {
+    const btn = document.getElementById('cancelSheetBtn');
+    if (btn) btn.addEventListener('click', closeSheet);
+  }
+
+  // ---------- SWAP ----------
+  function volunteerFutureDates(name, excludeDate) {
+    const today = todayStr();
+    return roster
+      .filter(r => sameName(r.volunteer, name) && r.date >= today && r.date !== excludeDate)
+      .map(r => r.date)
+      .sort();
+  }
+
+  function openSwapForm(dateA) {
+    const others = volunteers.filter(v => !sameName(v, currentVolunteer));
+    showSheet(`
+      <h3>Swap ${formatLabel(dateA)}</h3>
+      <p>Pick who you're swapping with — they must already have a date claimed.</p>
+      <label for="swapVolunteer">Swap with</label>
+      <select id="swapVolunteer">
+        <option value="">Select a volunteer</option>
+        ${others.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('')}
+      </select>
+      <label for="swapDate">Their date</label>
+      <select id="swapDate" disabled><option value="">Select a volunteer first</option></select>
+      <p class="subnote" id="swapNote"></p>
+      <div class="sheet-actions">
+        <button class="btn btn-primary" id="confirmSwapBtn" disabled>Confirm swap</button>
+        <button class="btn btn-text" id="cancelSheetBtn">Cancel</button>
+      </div>
+    `);
+    bindCancel();
+
+    const volSel = document.getElementById('swapVolunteer');
+    const dateSel = document.getElementById('swapDate');
+    const note = document.getElementById('swapNote');
+    const confirmBtn = document.getElementById('confirmSwapBtn');
+
+    volSel.addEventListener('change', () => {
+      const y = volSel.value;
+      confirmBtn.disabled = true;
+      if (!y) {
+        dateSel.disabled = true;
+        dateSel.innerHTML = '<option value="">Select a volunteer first</option>';
+        note.textContent = '';
+        return;
+      }
+      const dates = volunteerFutureDates(y, dateA).filter(d => !volunteerFutureDates(currentVolunteer, null).includes(d));
+      if (dates.length === 0) {
+        dateSel.disabled = true;
+        dateSel.innerHTML = '<option value="">No available dates to swap</option>';
+        note.textContent = `${y} has no other upcoming date you don't already have.`;
+        return;
+      }
+      dateSel.disabled = false;
+      dateSel.innerHTML = '<option value="">Select their date</option>' +
+        dates.map(d => `<option value="${d}">${formatLabel(d)}</option>`).join('');
+      note.textContent = '';
+    });
+
+    dateSel.addEventListener('change', () => { confirmBtn.disabled = !dateSel.value; });
+
+    confirmBtn.addEventListener('click', async () => {
+      const y = volSel.value, dateB = dateSel.value;
+      closeSheet();
+      await doSwap(dateA, dateB, y);
+    });
+  }
+
+  // ---------- REPLACE ----------
+  function openReplaceForm(dateStr, claims) {
+    const already = new Set(claims.map(c => c.volunteer.trim().toLowerCase()));
+    const eligible = volunteers.filter(v => !already.has(v.trim().toLowerCase()));
+    showSheet(`
+      <h3>Replace on ${formatLabel(dateStr)}</h3>
+      <p>They'll take over this date fully — you'll be removed.</p>
+      <label for="replaceVolunteer">Replace with</label>
+      <select id="replaceVolunteer">
+        <option value="">Select a volunteer</option>
+        ${eligible.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('')}
+      </select>
+      <div class="sheet-actions">
+        <button class="btn btn-primary" id="confirmReplaceBtn" disabled>Confirm replace</button>
+        <button class="btn btn-text" id="cancelSheetBtn">Cancel</button>
+      </div>
+    `);
+    bindCancel();
+    const sel = document.getElementById('replaceVolunteer');
+    const confirmBtn = document.getElementById('confirmReplaceBtn');
+    sel.addEventListener('change', () => { confirmBtn.disabled = !sel.value; });
+    confirmBtn.addEventListener('click', async () => {
+      const y = sel.value;
+      closeSheet();
+      await doReplace(dateStr, y);
+    });
+  }
+
+  // ---------- DELETE ----------
+  function openDeleteConfirm(dateStr) {
+    showSheet(`
+      <h3>Remove yourself from ${formatLabel(dateStr)}?</h3>
+      <p>This date will show as Open until someone else claims it.</p>
+      <div class="sheet-actions">
+        <button class="btn btn-risk" id="confirmDeleteBtn">Remove me</button>
+        <button class="btn btn-text" id="cancelSheetBtn">Cancel</button>
+      </div>
+    `);
+    bindCancel();
+    document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+      closeSheet();
+      await doDelete(dateStr);
+    });
+  }
+
+  // ---------- API CALLS ----------
+  async function doClaim(dateStr) {
+    try {
+      const res = await postAction({ action: 'claim', date: dateStr, volunteer: currentVolunteer });
+      if (res.success) {
+        roster = res.data;
+        renderCalendar();
+        showToast(`You're on for ${formatLabel(dateStr)}. Thank you.`);
+      } else {
+        showToast(res.error || 'Could not save. Try again.', true);
+      }
+    } catch (e) { showToast('Connection problem. Try again.', true); }
+  }
+
+  async function doSwap(dateA, dateB, volunteerY) {
+    try {
+      const res = await postAction({ action: 'swap', dateA, volunteerX: currentVolunteer, dateB, volunteerY });
+      if (res.success) {
+        roster = res.data;
+        renderCalendar();
+        showToast(`Swapped — you're now on ${formatLabel(dateB)}.`);
+      } else {
+        showToast(res.error || 'Could not swap. Try again.', true);
+      }
+    } catch (e) { showToast('Connection problem. Try again.', true); }
+  }
+
+  async function doReplace(dateStr, volunteerY) {
+    try {
+      const res = await postAction({ action: 'replace', date: dateStr, volunteerX: currentVolunteer, volunteerY });
+      if (res.success) {
+        roster = res.data;
+        renderCalendar();
+        showToast(`Done — ${volunteerY} is now on ${formatLabel(dateStr)}.`);
+      } else {
+        showToast(res.error || 'Could not replace. Try again.', true);
+      }
+    } catch (e) { showToast('Connection problem. Try again.', true); }
+  }
+
+  async function doDelete(dateStr) {
+    try {
+      const res = await postAction({ action: 'delete', date: dateStr, volunteer: currentVolunteer });
+      if (res.success) {
+        roster = res.data;
+        renderCalendar();
+        showToast(`Removed. ${formatLabel(dateStr)} is now open.`);
+      } else {
+        showToast(res.error || 'Could not remove. Try again.', true);
+      }
+    } catch (e) { showToast('Connection problem. Try again.', true); }
+  }
+
+  async function postAction(payload) {
+    // Body sent as a plain string keeps this a CORS-simple request (avoids
+    // a preflight OPTIONS call, which Apps Script web apps don't handle).
+    const res = await fetch(APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+    return res.json();
+  }
+
+  // ---------- SHEET / TOAST ----------
+  function showSheet(html) {
+    document.getElementById('sheetContent').innerHTML = html;
+    document.getElementById('overlay').classList.remove('hidden');
+  }
+  function closeSheet() { document.getElementById('overlay').classList.add('hidden'); }
+  document.getElementById('overlay').addEventListener('click', (e) => {
+    if (e.target.id === 'overlay') closeSheet();
+  });
+
+  let toastTimer;
+  function showToast(msg, isError) {
+    const toast = document.getElementById('toast');
+    toast.className = 'toast' + (isError ? ' error' : '');
+    toast.innerHTML = isError
+      ? `<span>${escapeHtml(msg)}</span>`
+      : `<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+           <circle cx="10" cy="10" r="9" stroke="white" stroke-width="1.5"/>
+           <path class="check" d="M6 10l3 3 5-6" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+         </svg><span>${escapeHtml(msg)}</span>`;
+    requestAnimationFrame(() => toast.classList.add('show'));
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+  }
+
+  document.getElementById('helpBtn').addEventListener('click', () => {
+    showSheet(`
+      <h3>How this works</h3>
+      <p><strong>Pick your name</strong> once at the top — it stays selected for your visit.</p>
+      <p><strong>Tap any open date</strong> to claim it for the midnight shift.</p>
+      <p><strong>Tap one of your own dates</strong> to:</p>
+      <p style="margin-top:-10px;">
+        <strong>Swap</strong> — trade with another volunteer who already has a date<br>
+        <strong>Replace</strong> — hand your date to someone else<br>
+        <strong>Remove yourself</strong> — date goes back to open, no replacement needed
+      </p>
+      <p><strong>Switch months</strong> using the tabs at the top.</p>
+      <p style="margin-bottom:0;">Past dates are shown but can't be changed.</p>
+      <div class="sheet-actions" style="margin-top:16px;"><button class="btn btn-primary" id="cancelSheetBtn">Got it</button></div>
+    `);
+    bindCancel();
+  });
+
+  let isRefreshing = false;
+  async function refreshData(announce) {
+    if (isRefreshing) return;
+    isRefreshing = true;
+    const btn = document.getElementById('refreshBtn');
+    if (btn) { btn.disabled = true; btn.classList.add('spinning'); }
+    try {
+      const res = await fetch(APP_URL);
+      const json = await res.json();
+      if (json.success) {
+        volunteers = json.data.volunteers;
+        roster = json.data.roster;
+        populateVolunteerSelect();
+        renderCalendar();
+        if (announce) showToast('Refreshed.');
+      }
+    } catch (e) {
+      if (announce) showToast('Could not refresh. Try again.', true);
+    } finally {
+      isRefreshing = false;
+      if (btn) { btn.disabled = false; btn.classList.remove('spinning'); }
+    }
+  }
+
+  document.getElementById('refreshBtn').addEventListener('click', () => refreshData(true));
+
+  // Quietly catch up when the tab/app regains focus — e.g. someone switches
+  // to WhatsApp to arrange a swap, then comes back. No toast, so the screen
+  // doesn't announce itself while someone's mid-read.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') refreshData(false);
+  });
+
+  loadData();
+</script>
+</body>
+</html>
