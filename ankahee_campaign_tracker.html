@@ -230,6 +230,8 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 .s-dot { width: 5px; height: 5px; border-radius: 50%; }
 .sp-Pending  { background: var(--slate-light); color: var(--slate); }
 .sp-Pending  .s-dot { background: var(--slate); }
+.sp-Ongoing  { background: var(--teal-light); color: var(--teal); }
+.sp-Ongoing  .s-dot { background: var(--teal); }
 .sp-Blocked  { background: var(--violet-light); color: var(--violet); }
 .sp-Blocked  .s-dot { background: var(--violet); }
 .sp-Done     { background: #eaf5ee; color: #2e7d4f; }
@@ -368,6 +370,7 @@ body.hide-owner .col-owner { display: none !important; }
   <select class="ctrl-select" id="f-status">
     <option value="All">All</option>
     <option value="Pending">Pending</option>
+    <option value="Ongoing">Ongoing</option>
     <option value="Blocked">Blocked</option>
     <option value="Done">Done</option>
   </select>
@@ -384,8 +387,8 @@ body.hide-owner .col-owner { display: none !important; }
       <div class="kpi-bar"></div><div class="kpi-lbl">Total Tasks</div>
       <div class="kpi-num" id="k-total">—</div><div class="kpi-hint">tap to view all</div>
     </div>
-    <div class="kpi-card kpi-pending" onclick="openModal('status','Pending')">
-      <div class="kpi-bar"></div><div class="kpi-lbl">Pending</div>
+    <div class="kpi-card kpi-pending" onclick="openModal('pendongoing','')">
+      <div class="kpi-bar"></div><div class="kpi-lbl">Pending/Ongoing</div>
       <div class="kpi-num" id="k-pending">—</div><div class="kpi-hint">tap to view</div>
     </div>
     <div class="kpi-card kpi-blocked" onclick="openModal('status','Blocked')">
@@ -444,7 +447,7 @@ body.hide-owner .col-owner { display: none !important; }
         <div class="bkd-hdr">By Person</div>
         <table class="bkd-table">
           <thead><tr>
-            <th>Owner</th><th>Total</th><th>Pending</th>
+            <th>Owner</th><th>Total</th><th>Pending/<br>Ongoing</th>
             <th class="bkd-hide-mobile">Blocked</th><th>Overdue</th>
           </tr></thead>
           <tbody id="bkd-person"></tbody>
@@ -454,7 +457,7 @@ body.hide-owner .col-owner { display: none !important; }
         <div class="bkd-hdr">By Category</div>
         <table class="bkd-table">
           <thead><tr>
-            <th>Category</th><th>Total</th><th>Pending</th>
+            <th>Category</th><th>Total</th><th>Pending/<br>Ongoing</th>
             <th class="bkd-hide-mobile">Blocked</th><th>Overdue</th>
           </tr></thead>
           <tbody id="bkd-cat"></tbody>
@@ -762,6 +765,12 @@ function isNoDueDateOnly(t) {
   return isNoDate(t) && !isNoOwner(t);
 }
 
+// Pending and Ongoing are tracked as one combined figure in KPIs/breakdowns
+// (individual status is still visible per-row in the task list/status filter).
+function isPendingOrOngoing(t) {
+  return t.status === 'Pending' || t.status === 'Ongoing';
+}
+
 // ── FILTERS ──────────────────────────────────────────────────────────────────
 function buildFilters() {
   const owners = [...new Set(ALL.map(t=>t.owner).filter(Boolean))].sort();
@@ -801,7 +810,7 @@ function render() {
 // ── KPIs ─────────────────────────────────────────────────────────────────────
 function renderKPIs(tasks) {
   document.getElementById('k-total').textContent   = tasks.length;
-  document.getElementById('k-pending').textContent = tasks.filter(t=>t.status==='Pending').length;
+  document.getElementById('k-pending').textContent = tasks.filter(isPendingOrOngoing).length;
   document.getElementById('k-blocked').textContent = tasks.filter(t=>t.status==='Blocked').length;
   document.getElementById('k-overdue').textContent = tasks.filter(isOverdue).length;
   document.getElementById('k-nodate').textContent  = tasks.filter(isNoDate).length;
@@ -893,13 +902,13 @@ function renderBreakdown(tasks, selectedOwner) {
     : [selectedOwner];
   document.getElementById('bkd-person').innerHTML = owners.map(o => {
     const ot = tasks.filter(t=>t.owner===o);
-    const pend=ot.filter(t=>t.status==='Pending').length;
+    const pend=ot.filter(isPendingOrOngoing).length;
     const bloc=ot.filter(t=>t.status==='Blocked').length;
     const ovrd=ot.filter(isOverdue).length;
     return `<tr>
       <td class="td-owner">${esc(o)}</td>
       <td>${nl(ot.length,'owner-all',o)}</td>
-      <td>${nl(pend,'owner-status',o+':Pending')}</td>
+      <td>${nl(pend,'owner-pendongoing',o)}</td>
       <td class="bkd-hide-mobile">${nl(bloc,'owner-status',o+':Blocked')}</td>
       <td>${ovrd>0 ? no(ovrd,'owner-ovrd',o) : '<span class="n-zero">0</span>'}</td>
     </tr>`;
@@ -909,13 +918,13 @@ function renderBreakdown(tasks, selectedOwner) {
   const cats = [...new Set(tasks.map(t=>t.cat).filter(Boolean))].sort();
   document.getElementById('bkd-cat').innerHTML = cats.map(c => {
     const ct = tasks.filter(t=>t.cat===c);
-    const pend=ct.filter(t=>t.status==='Pending').length;
+    const pend=ct.filter(isPendingOrOngoing).length;
     const bloc=ct.filter(t=>t.status==='Blocked').length;
     const ovrd=ct.filter(isOverdue).length;
     return `<tr>
       <td class="td-cat">${esc(c)}</td>
       <td>${nl(ct.length,'cat-all',c)}</td>
-      <td>${nl(pend,'cat-status',c+':Pending')}</td>
+      <td>${nl(pend,'cat-pendongoing',c)}</td>
       <td class="bkd-hide-mobile">${nl(bloc,'cat-status',c+':Blocked')}</td>
       <td>${ovrd>0 ? no(ovrd,'cat-ovrd',c) : '<span class="n-zero">0</span>'}</td>
     </tr>`;
@@ -1044,14 +1053,17 @@ function openModal(type, rawKey) {
 
   if      (type==='all')          { tasks=base; title='All tasks'; }
   else if (type==='status')       { tasks=base.filter(t=>t.status===key); title=`${key} tasks`; }
+  else if (type==='pendongoing')  { tasks=base.filter(isPendingOrOngoing); title='Pending / Ongoing tasks'; }
   else if (type==='overdue')      { tasks=base.filter(isOverdue); title='Overdue tasks'; }
   else if (type==='nodate')       { tasks=base.filter(isNoDate);  title='Tasks with no due date'; }
   else if (type==='noowner')      { tasks=base.filter(isNoOwner); title='Tasks with no owner'; }
   else if (type==='owner-all')    { tasks=ALL.filter(t=>t.owner===key); title=`All tasks — ${key}`; }
   else if (type==='owner-status') { const [o,s]=key.split(':'); tasks=ALL.filter(t=>t.owner===o&&t.status===s); title=`${s} — ${o}`; }
+  else if (type==='owner-pendongoing') { tasks=ALL.filter(t=>t.owner===key&&isPendingOrOngoing(t)); title=`Pending / Ongoing — ${key}`; }
   else if (type==='owner-ovrd')   { tasks=ALL.filter(t=>t.owner===key&&isOverdue(t)); title=`Overdue — ${key}`; }
   else if (type==='cat-all')      { tasks=ALL.filter(t=>t.cat===key); title=`All tasks — ${key}`; }
   else if (type==='cat-status')   { const [c,s]=key.split(':'); tasks=ALL.filter(t=>t.cat===c&&t.status===s); title=`${s} — ${c}`; }
+  else if (type==='cat-pendongoing') { tasks=ALL.filter(t=>t.cat===key&&isPendingOrOngoing(t)); title=`Pending / Ongoing — ${key}`; }
   else if (type==='cat-ovrd')     { tasks=ALL.filter(t=>t.cat===key&&isOverdue(t)); title=`Overdue — ${key}`; }
 
   document.getElementById('list-modal-title').textContent = `${title} (${tasks.length})`;
