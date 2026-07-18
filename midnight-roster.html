@@ -153,7 +153,9 @@
     background: var(--success); color: #fff; padding: 14px 20px; border-radius: 12px;
     display: flex; align-items: center; gap: 10px; font-size: 14px; box-shadow: var(--shadow);
     opacity: 0; transition: opacity 0.25s ease, transform 0.25s ease; z-index: 60; max-width: 90%;
+    pointer-events: none;
   }
+  .toast.show { pointer-events: auto; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .toast.error { background: var(--risk); }
   .check { stroke-dasharray: 20; stroke-dashoffset: 20; animation: draw 0.4s ease forwards 0.1s; }
