@@ -24,7 +24,14 @@
     --shadow: 0 2px 10px rgba(46, 42, 51, 0.06);
   }
 
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  button, .cal-cell, .chip, .month-tab, .icon-btn, .refresh-btn {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+  }
 
   body {
     margin: 0;
@@ -648,7 +655,7 @@
         <strong>Replace</strong> — hand your date to someone else<br>
         <strong>Remove yourself</strong> — date goes back to open, no replacement needed
       </p>
-      <p><strong>Switch months</strong> using the tabs at the top.</p>
+      <p><strong>Switch months</strong> using the tabs at the top (Sep / Oct / Nov).</p>
       <p style="margin-bottom:0;">Past dates are shown but can't be changed.</p>
       <div class="sheet-actions" style="margin-top:16px;"><button class="btn btn-primary" id="cancelSheetBtn">Got it</button></div>
     `);
