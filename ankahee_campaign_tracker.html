@@ -834,6 +834,8 @@ function quickFilter(opts) {
 
 function clearQuickFilter() {
   QUICK = null;
+  document.getElementById('f-owner').value = 'All';
+  document.getElementById('f-cat').value = 'All';
   document.getElementById('f-status').value = 'All';
   render();
 }
@@ -848,8 +850,18 @@ const QUICK_LABELS = {
 
 function updateActiveFilterBar() {
   const bar = document.getElementById('active-filter-bar');
-  if (!QUICK) { bar.classList.remove('show'); return; }
-  document.getElementById('af-chip-text').textContent = QUICK_LABELS[QUICK] || QUICK;
+  const o = document.getElementById('f-owner').value;
+  const c = document.getElementById('f-cat').value;
+  const s = document.getElementById('f-status').value;
+
+  const parts = [];
+  if (o !== 'All') parts.push(o);
+  if (c !== 'All') parts.push(c);
+  if (s !== 'All') parts.push(s);
+  if (QUICK) parts.push(QUICK_LABELS[QUICK] || QUICK);
+
+  if (parts.length === 0) { bar.classList.remove('show'); return; }
+  document.getElementById('af-chip-text').textContent = parts.join(' · ');
   bar.classList.add('show');
 }
 
