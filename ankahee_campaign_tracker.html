@@ -86,6 +86,35 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 }
 .sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
+/* ── NOTES ── */
+.notes-card {
+  background: var(--white); border-radius: 10px; border: 1.5px solid var(--border);
+  overflow: hidden; margin-bottom: 4px;
+}
+.notes-hdr {
+  display: flex; align-items: center; gap: 8px; padding: 12px 16px;
+  cursor: pointer; user-select: none; background: var(--teal-light);
+}
+.notes-hdr:hover { background: #dcedee; }
+.notes-hdr-title { font-size: 13px; font-weight: 700; color: var(--teal-dark); flex: 1; }
+.notes-caret { font-size: 11px; color: var(--teal-dark); transition: transform 0.15s; }
+.notes-card.open .notes-caret { transform: rotate(90deg); }
+.notes-body { display: none; padding: 14px 18px; }
+.notes-card.open .notes-body { display: block; }
+.notes-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+.notes-item:last-child { border-bottom: none; }
+.notes-item-h { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.notes-item-d { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+.notes-empty { font-size: 12px; color: var(--muted); padding: 8px 0; }
+
+/* ── PARKED LINK ── */
+.parked-link-row { display: flex; justify-content: flex-end; margin-top: 6px; }
+.parked-link {
+  font-size: 12px; color: var(--amber); font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 4px; text-decoration: underline dotted; text-underline-offset: 2px;
+}
+.parked-link:hover { color: #b87a08; }
+
 /* ── KPI CARDS ── */
 .kpi-row {
   display: grid; gap: 10px;
@@ -213,6 +242,20 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 }
 .tbl-filter:focus { border-color: var(--teal); }
 
+.active-filter-bar {
+  display: none; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 9px 14px; background: var(--amber-light);
+  border-bottom: 1px solid var(--amber-mid); font-size: 12px; color: var(--text);
+}
+.active-filter-bar.show { display: flex; }
+.af-chip { font-weight: 600; color: var(--amber); }
+.af-clear {
+  cursor: pointer; color: var(--muted); font-weight: 600; font-size: 11px;
+  border: 1px solid var(--border); border-radius: 20px; padding: 2px 10px;
+  background: var(--white); transition: border-color 0.15s, color 0.15s;
+}
+.af-clear:hover { color: var(--coral); border-color: var(--coral-mid); }
+
 .task-table { width: 100%; border-collapse: collapse; }
 .task-table th {
   font-size: 10px; font-weight: 700; color: var(--muted);
@@ -225,6 +268,8 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 .task-table tr:hover td { background: var(--slate-light); }
 .task-table tr.row-overdue td { background: #fff9f8; }
 .task-table tr.row-overdue:hover td { background: var(--coral-light); }
+.task-table tr.row-parked td { background: #fdfaf0; opacity: 0.8; }
+.task-table tr.row-parked:hover td { background: var(--amber-light); }
 
 .status-pill { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .s-dot { width: 5px; height: 5px; border-radius: 50%; }
@@ -236,6 +281,8 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 .sp-Blocked  .s-dot { background: var(--violet); }
 .sp-Done     { background: #eaf5ee; color: #2e7d4f; }
 .sp-Done     .s-dot { background: #2e7d4f; }
+.sp-Parked   { background: var(--amber-light); color: var(--amber); }
+.sp-Parked   .s-dot { background: var(--amber); }
 
 .pri-pill { padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; white-space: nowrap; }
 .pr-High   { background: #fde8e8; color: #c53030; }
@@ -264,6 +311,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 }
 .task-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.08); }
 .task-card.tc-overdue { border-left: 3px solid var(--coral); }
+.task-card.tc-parked { opacity: 0.75; border-left: 3px solid var(--amber); }
 .tc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
 .tc-task { font-weight: 600; font-size: 13px; color: var(--text); flex: 1; line-height: 1.4; }
 .tc-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 11px; color: var(--muted); }
@@ -271,7 +319,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 .tc-date  { color: var(--muted); }
 .tc-cat   { color: var(--teal-dark); font-size: 10px; font-weight: 600; }
 
-/* ── MODAL ── */
+/* ── MODAL (mobile task detail only) ── */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; align-items: center; justify-content: center; padding: 16px; }
 .modal-overlay.open { display: flex; }
 .modal { background: var(--white); border-radius: 12px; width: 100%; max-width: 800px; max-height: 88vh; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
@@ -281,17 +329,11 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 .modal-close:hover { opacity: 1; }
 .modal-body { overflow-y: auto; flex: 1; }
 
-/* detail modal (mobile tap) */
 .detail-modal .modal-body { padding: 16px 20px; }
 .detail-row { display: flex; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
 .detail-row:last-child { border-bottom: none; }
 .detail-lbl { font-weight: 600; color: var(--muted); width: 110px; flex-shrink: 0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; padding-top: 1px; }
 .detail-val { color: var(--text); flex: 1; }
-
-.modal-table { width: 100%; border-collapse: collapse; }
-.modal-table th { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; padding: 9px 14px; background: var(--slate-light); border-bottom: 2px solid var(--border); text-align: left; position: sticky; top: 0; }
-.modal-table td { padding: 9px 14px; font-size: 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
-.modal-table tr:hover td { background: var(--slate-light); }
 
 /* ── LOADING / ERROR ── */
 #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.92); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 300; }
@@ -306,7 +348,6 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 .gh-steps ol { padding-left: 16px; line-height: 2; }
 
 /* ── DYNAMIC COLUMN VISIBILITY ── */
-/* toggled via body class when a column is absent from the sheet */
 body.hide-priority .col-priority,
 body.hide-cat .col-cat,
 body.hide-remarks .col-remarks,
@@ -323,15 +364,10 @@ body.hide-owner .col-owner { display: none !important; }
   main { padding: 16px 12px 50px; }
 
   .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  /* force 3rd status card (Blocked) to span full on its row when alone — handled by grid flow */
-
   .exc-grid { grid-template-columns: 1fr; }
   .breakdown-grid { grid-template-columns: 1fr; }
-
-  /* hide Blocked column in breakdown on mobile to fit */
   .bkd-hide-mobile { display: none; }
 
-  /* task table → cards on mobile */
   .tbl-desktop { display: none; }
   .task-cards  { display: block; }
 }
@@ -373,6 +409,7 @@ body.hide-owner .col-owner { display: none !important; }
     <option value="Ongoing">Ongoing</option>
     <option value="Blocked">Blocked</option>
     <option value="Done">Done</option>
+    <option value="Parked">Parked</option>
   </select>
   <button class="btn-refresh" onclick="loadData()">↻ Refresh</button>
 </div>
@@ -380,18 +417,29 @@ body.hide-owner .col-owner { display: none !important; }
 <main>
   <div id="error-banner"></div>
 
+  <!-- NOTES -->
+  <div class="notes-card" id="notes-card">
+    <div class="notes-hdr" onclick="toggleNotes()">
+      <span class="notes-caret">▶</span>
+      <span class="notes-hdr-title">📌 Key Objectives &amp; Decisions</span>
+    </div>
+    <div class="notes-body" id="notes-body">
+      <div class="notes-empty">No notes added yet.</div>
+    </div>
+  </div>
+
   <!-- KPI ROW 1: STATUS -->
   <div class="sec-label">Status</div>
   <div class="kpi-row">
-    <div class="kpi-card kpi-total"   onclick="openModal('all','')">
+    <div class="kpi-card kpi-total"   onclick="quickFilter({})">
       <div class="kpi-bar"></div><div class="kpi-lbl">Total Tasks</div>
-      <div class="kpi-num" id="k-total">—</div><div class="kpi-hint">tap to view all</div>
+      <div class="kpi-num" id="k-total">—</div><div class="kpi-hint">tap to view</div>
     </div>
-    <div class="kpi-card kpi-pending" onclick="openModal('pendongoing','')">
+    <div class="kpi-card kpi-pending" onclick="quickFilter({quick:'pendongoing'})">
       <div class="kpi-bar"></div><div class="kpi-lbl">Pending/Ongoing</div>
       <div class="kpi-num" id="k-pending">—</div><div class="kpi-hint">tap to view</div>
     </div>
-    <div class="kpi-card kpi-blocked" onclick="openModal('status','Blocked')">
+    <div class="kpi-card kpi-blocked" onclick="quickFilter({status:'Blocked'})">
       <div class="kpi-bar"></div><div class="kpi-lbl">Blocked</div>
       <div class="kpi-num" id="k-blocked">—</div><div class="kpi-hint">tap to view</div>
     </div>
@@ -400,24 +448,27 @@ body.hide-owner .col-owner { display: none !important; }
   <!-- KPI ROW 2: NEEDS ATTENTION -->
   <div class="sec-label" style="margin-top:14px;">Needs attention</div>
   <div class="kpi-row">
-    <div class="kpi-card kpi-overdue" onclick="openModal('overdue','')">
+    <div class="kpi-card kpi-overdue" onclick="quickFilter({quick:'overdue'})">
       <div class="kpi-bar"></div><div class="kpi-lbl">Overdue</div>
       <div class="kpi-num" id="k-overdue">—</div><div class="kpi-hint">date elapsed, not done</div>
     </div>
-    <div class="kpi-card kpi-nodate"  onclick="openModal('nodate','')">
+    <div class="kpi-card kpi-nodate"  onclick="quickFilter({quick:'nodate'})">
       <div class="kpi-bar"></div><div class="kpi-lbl">No Due Date</div>
       <div class="kpi-num" id="k-nodate">—</div><div class="kpi-hint">active, date missing</div>
     </div>
-    <div class="kpi-card kpi-noowner col-owner" onclick="openModal('noowner','')">
+    <div class="kpi-card kpi-noowner col-owner" onclick="quickFilter({quick:'noowner'})">
       <div class="kpi-bar"></div><div class="kpi-lbl">No Owner</div>
       <div class="kpi-num" id="k-noowner">—</div><div class="kpi-hint">nobody assigned</div>
     </div>
   </div>
 
+  <div class="parked-link-row" id="parked-link-row" style="display:none;">
+    <span class="parked-link" onclick="quickFilter({quick:'parked'})">📌 <span id="parked-count">0</span> parked ideas — view →</span>
+  </div>
+
   <!-- EXCEPTIONS -->
   <div class="sec-label">Exceptions</div>
   <div class="exc-grid">
-    <!-- Overdue -->
     <div class="exc-card exc-overdue">
       <div class="exc-hdr">
         <span class="exc-hdr-title">⚠ Overdue tasks</span>
@@ -427,7 +478,6 @@ body.hide-owner .col-owner { display: none !important; }
         <div class="exc-empty">No overdue tasks — great work!</div>
       </div>
     </div>
-    <!-- Incomplete data -->
     <div class="exc-card exc-incomplete">
       <div class="exc-hdr">
         <span class="exc-hdr-title">◉ Incomplete data</span>
@@ -468,7 +518,7 @@ body.hide-owner .col-owner { display: none !important; }
 
   <!-- TASK LIST -->
   <div class="sec-label" style="margin-top:24px;">Task list</div>
-  <div class="tbl-wrap">
+  <div class="tbl-wrap" id="tbl-wrap">
     <div class="tbl-toolbar">
       <h3 id="tbl-title">All tasks</h3>
       <select class="tbl-filter col-priority" id="f-pri" onchange="renderTaskList()">
@@ -478,6 +528,11 @@ body.hide-owner .col-owner { display: none !important; }
         <option value="Low">Low</option>
       </select>
       <span class="tbl-count" id="tbl-count"></span>
+    </div>
+
+    <div class="active-filter-bar" id="active-filter-bar">
+      <span>Showing:</span> <span class="af-chip" id="af-chip-text"></span>
+      <span class="af-clear" onclick="clearQuickFilter()">✕ Clear</span>
     </div>
 
     <!-- Desktop table -->
@@ -496,22 +551,6 @@ body.hide-owner .col-owner { display: none !important; }
   </div>
 </main>
 
-<!-- LIST MODAL (KPI / breakdown drilldowns) -->
-<div class="modal-overlay" id="list-modal" onclick="closeModalOutside(event,'list-modal')">
-  <div class="modal">
-    <div class="modal-hdr">
-      <h2 id="list-modal-title">Tasks</h2>
-      <button class="modal-close" onclick="closeModal('list-modal')">×</button>
-    </div>
-    <div class="modal-body">
-      <table class="modal-table">
-        <thead><tr><th class="col-cat">Category</th><th>Task</th><th class="col-owner">Owner</th><th>Due Date</th><th class="col-priority">Priority</th><th>Status</th><th class="col-remarks">Remarks</th></tr></thead>
-        <tbody id="list-modal-body"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
 <!-- DETAIL MODAL (mobile task tap) -->
 <div class="modal-overlay" id="detail-modal" onclick="closeModalOutside(event,'detail-modal')">
   <div class="modal detail-modal">
@@ -525,13 +564,17 @@ body.hide-owner .col-owner { display: none !important; }
 
 <script>
 // ── CONFIG ───────────────────────────────────────────────────────────────────
-// Paste the CSV URL from File → Share → Publish to web → WSPD tab → CSV
+// Tasks tab: File → Share → Publish to web → WSPD tab → CSV → paste URL below
 const SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSxUJ2mtcQb2NeAEDntqCYPKsbkiSd8LYqiGEEpbp4nfnDnOIpVu0iZhtD0NMxDcrUBfrNmsRMcc3vl/pub?gid=0&single=true&output=csv';
 
-// Column detection is dynamic — based on header text in Row 1 of the sheet,
-// not fixed position. This means adding, removing, or reordering columns
-// in the sheet will NOT break the dashboard. Only renaming a header would
-// require updating the alias list below.
+// Notes tab (new tab in the same sheet, with just two columns: Heading, Detail).
+// File → Share → Publish to web → select the Notes tab → CSV → paste URL below.
+// If left as-is or if the tab doesn't exist yet, the Notes panel simply stays empty — no error shown.
+const NOTES_CSV_URL = '';
+
+// Column detection is dynamic — based on header text in Row 1, not fixed
+// position. Adding, removing, or reordering columns in the sheet will NOT
+// break the dashboard. Only renaming a header requires updating aliases below.
 const FIELD_ALIASES = {
   srno:     ['sr no','sr. no','s.no','sl no','sr.no'],
   cat:      ['category'],
@@ -543,29 +586,30 @@ const FIELD_ALIASES = {
   status:   ['status'],
   remarks:  ['remarks','notes'],
 };
-let COL = {};   // field -> column index (or -1 if absent)
-let HAS = {};   // field -> boolean, whether column exists in the sheet
-let EXTRA = [];  // any sheet columns not in the known field list: [{label, idx}]
+const NOTES_ALIASES = {
+  heading: ['heading','point','topic','title'],
+  detail:  ['detail','details','description','notes'],
+};
 
-function detectColumns(headerCells) {
+let COL = {};
+let HAS = {};
+let EXTRA = [];
+
+function detectColumns(headerCells, aliasMap) {
   const headers = headerCells.map(h => (h||'').trim().toLowerCase());
   const col = {};
-  for (const field in FIELD_ALIASES) {
-    const aliases = FIELD_ALIASES[field];
-    col[field] = headers.findIndex(h => aliases.includes(h));
+  for (const field in aliasMap) {
+    col[field] = headers.findIndex(h => aliasMap[field].includes(h));
   }
   return col;
 }
 
-// Any header not matched to a known field is treated as a dynamic extra
-// column and shown as-is (in sheet order) at the end of the All Tasks table.
 function detectExtraColumns(headerCells, col) {
   const knownIdx = new Set(Object.values(col).filter(i => i >= 0));
   const extras = [];
   headerCells.forEach((h, i) => {
     const label = (h||'').trim();
-    if (!label) return;
-    if (knownIdx.has(i)) return;
+    if (!label || knownIdx.has(i)) return;
     extras.push({ label, idx: i });
   });
   return extras;
@@ -583,69 +627,63 @@ function applyColumnVisibility() {
 // ── STATE ────────────────────────────────────────────────────────────────────
 let ALL = [];
 let TODAY = new Date(); TODAY.setHours(0,0,0,0);
+let QUICK = null; // active quick filter: 'pendongoing' | 'overdue' | 'nodate' | 'noowner' | 'parked' | null
 
-// ── FETCH ────────────────────────────────────────────────────────────────────
+// ── FETCH HELPERS ────────────────────────────────────────────────────────────
+async function fetchViaProxies(url) {
+  const full = url + (url.includes('?') ? '&' : '?') + 't=' + Date.now();
+  try {
+    const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(full));
+    if (r.ok) { const t = await r.text(); if (t && t.length > 5) return t; }
+  } catch(e) {}
+  try {
+    const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(full));
+    if (r.ok) { const j = await r.json(); if (j.contents) return j.contents; }
+  } catch(e) {}
+  try {
+    const r = await fetch(full, { mode:'cors' });
+    if (r.ok) { const t = await r.text(); if (t && t.length > 5) return t; }
+  } catch(e) {}
+  return null;
+}
+
 async function loadData() {
   document.getElementById('loading').style.display = 'flex';
   document.getElementById('error-banner').style.display = 'none';
-  const url = SHEET_CSV_URL + '&t=' + Date.now();
-  let text = null;
 
-  try {
-    const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
-    if (r.ok) text = await r.text();
-  } catch(e) {}
-
-  if (!text) {
-    try {
-      const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
-      if (r.ok) { const j = await r.json(); text = j.contents; }
-    } catch(e) {}
-  }
-
-  if (!text) {
-    try {
-      const r = await fetch(url, { mode:'cors' });
-      if (r.ok) text = await r.text();
-    } catch(e) {}
-  }
-
+  const text = await fetchViaProxies(SHEET_CSV_URL);
   if (!text) {
     showError(); document.getElementById('loading').style.display = 'none'; return;
   }
-
   ALL = parseCSV(text);
   buildFilters();
   render();
   document.getElementById('last-refresh').textContent =
     new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+
+  // Notes — best-effort, silent on failure
+  if (NOTES_CSV_URL) {
+    const notesText = await fetchViaProxies(NOTES_CSV_URL);
+    if (notesText) renderNotes(parseNotesCSV(notesText));
+  }
+
   document.getElementById('loading').style.display = 'none';
 }
 
-// ── CSV ──────────────────────────────────────────────────────────────────────
-// Proper CSV tokenizer — reads character by character so that newlines
-// INSIDE quoted fields (e.g. multi-line Remarks entered with Ctrl+Enter in
-// Google Sheets) are preserved as part of the cell, not mistaken for a new row.
+// ── CSV TOKENIZER (handles embedded newlines in quoted multi-line cells) ─────
 function tokenizeCSV(text) {
-  const rows = [];
-  let row = [];
-  let field = '';
-  let inQuotes = false;
+  const rows = []; let row = []; let field = ''; let inQuotes = false;
   for (let i = 0; i < text.length; i++) {
     const ch = text[i];
     if (inQuotes) {
-      if (ch === '"') {
-        if (text[i+1] === '"') { field += '"'; i++; }
-        else { inQuotes = false; }
-      } else {
-        field += ch;
-      }
+      if (ch === '"') { if (text[i+1] === '"') { field += '"'; i++; } else { inQuotes = false; } }
+      else field += ch;
     } else {
-      if (ch === '"') { inQuotes = true; }
+      if (ch === '"') inQuotes = true;
       else if (ch === ',') { row.push(field); field = ''; }
-      else if (ch === '\r') { /* ignore, \n handles the break */ }
+      else if (ch === '\r') { /* skip */ }
       else if (ch === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
-      else { field += ch; }
+      else field += ch;
     }
   }
   if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row); }
@@ -656,52 +694,49 @@ function parseCSV(text) {
   const rows = tokenizeCSV(text.trim());
   if (rows.length === 0) return [];
 
-  // Row 1 = headers → detect column positions by name
   const headerCells = rows[0];
-  COL = detectColumns(headerCells);
+  COL = detectColumns(headerCells, FIELD_ALIASES);
   EXTRA = detectExtraColumns(headerCells, COL);
   HAS = {
-    cat:      COL.cat      >= 0,
-    task:     COL.task     >= 0,
-    priority: COL.priority >= 0,
-    owner:    COL.owner    >= 0,
-    due:      COL.due      >= 0,
-    revised:  COL.revised  >= 0,
-    status:   COL.status   >= 0,
-    remarks:  COL.remarks  >= 0,
+    cat: COL.cat>=0, task: COL.task>=0, priority: COL.priority>=0, owner: COL.owner>=0,
+    due: COL.due>=0, revised: COL.revised>=0, status: COL.status>=0, remarks: COL.remarks>=0,
   };
   applyColumnVisibility();
   renderExtraHeaders();
 
   const get = (cells, field) => COL[field] >= 0 ? (cells[COL[field]]||'').trim() : '';
-
   const out = [];
   for (let i = 1; i < rows.length; i++) {
     const c = rows[i];
     const task = HAS.task ? get(c,'task') : '';
     if (!task) continue;
-    const extraVals = EXTRA.map(ex => (c[ex.idx]||'').trim());
     out.push({
-      cat:      get(c,'cat'),
-      task,
-      priority: get(c,'priority'),
-      owner:    get(c,'owner'),
-      due:      toDate(get(c,'due')),
-      revised:  toDate(get(c,'revised')),
-      status:   get(c,'status') || 'Pending',
-      remarks:  get(c,'remarks'),
-      extraVals,
+      cat: get(c,'cat'), task, priority: get(c,'priority'), owner: get(c,'owner'),
+      due: toDate(get(c,'due')), revised: toDate(get(c,'revised')),
+      status: get(c,'status') || 'Pending', remarks: get(c,'remarks'),
+      extraVals: EXTRA.map(ex => (c[ex.idx]||'').trim()),
     });
   }
   return out;
 }
 
-// Adds a <th> to the All Tasks table header for each unrecognized sheet
-// column, so new columns you add show up automatically without a recode.
+function parseNotesCSV(text) {
+  const rows = tokenizeCSV(text.trim());
+  if (rows.length < 2) return [];
+  const col = detectColumns(rows[0], NOTES_ALIASES);
+  const get = (cells, field) => col[field] >= 0 ? (cells[col[field]]||'').trim() : '';
+  const out = [];
+  for (let i = 1; i < rows.length; i++) {
+    const heading = get(rows[i], 'heading');
+    if (!heading) continue;
+    out.push({ heading, detail: get(rows[i], 'detail') });
+  }
+  return out;
+}
+
 function renderExtraHeaders() {
   const headRow = document.getElementById('tbl-head-row');
   if (!headRow) return;
-  // remove previously injected extra headers before re-adding
   headRow.querySelectorAll('.col-extra').forEach(el => el.remove());
   EXTRA.forEach(ex => {
     const th = document.createElement('th');
@@ -709,17 +744,6 @@ function renderExtraHeaders() {
     th.textContent = ex.label;
     headRow.appendChild(th);
   });
-}
-
-function splitLine(line) {
-  const res = []; let cur = ''; let q = false;
-  for (const ch of line) {
-    if (ch === '"') { q = !q; continue; }
-    if (ch === ',' && !q) { res.push(cur); cur = ''; continue; }
-    cur += ch;
-  }
-  res.push(cur);
-  return res;
 }
 
 function toDate(s) {
@@ -743,68 +767,107 @@ function fmt(d) {
 function effDate(t) { return (t.revised && !isNaN(t.revised)) ? t.revised : t.due; }
 
 function isOverdue(t) {
-  if (t.status === 'Done') return false;
+  if (t.status === 'Done' || t.status === 'Parked') return false;
   const d = effDate(t);
   return d && !isNaN(d) && d < TODAY;
 }
-
 function isNoDate(t) {
   if (!HAS.due) return false;
-  if (t.status === 'Done') return false;
+  if (t.status === 'Done' || t.status === 'Parked') return false;
   return !t.due || isNaN(t.due);
 }
-
 function isNoOwner(t) {
   if (!HAS.owner) return false;
-  if (t.status === 'Done') return false;
+  if (t.status === 'Done' || t.status === 'Parked') return false;
   return !t.owner;
 }
-
-// task missing both — show only under noOwner, not noDate
-function isNoDueDateOnly(t) {
-  return isNoDate(t) && !isNoOwner(t);
-}
-
-// Pending and Ongoing are tracked as one combined figure in KPIs/breakdowns
-// (individual status is still visible per-row in the task list/status filter).
-function isPendingOrOngoing(t) {
-  return t.status === 'Pending' || t.status === 'Ongoing';
-}
+function isNoDueDateOnly(t) { return isNoDate(t) && !isNoOwner(t); }
+function isPendingOrOngoing(t) { return t.status === 'Pending' || t.status === 'Ongoing'; }
 
 // ── FILTERS ──────────────────────────────────────────────────────────────────
 function buildFilters() {
   const owners = [...new Set(ALL.map(t=>t.owner).filter(Boolean))].sort();
   const os = document.getElementById('f-owner');
   os.innerHTML = '<option value="All">All Team</option>';
-  owners.forEach(o => { const opt = document.createElement('option'); opt.value=o; opt.textContent=o; os.appendChild(opt); });
+  owners.forEach(o => { const opt=document.createElement('option'); opt.value=o; opt.textContent=o; os.appendChild(opt); });
 
   const cats = [...new Set(ALL.map(t=>t.cat).filter(Boolean))].sort();
   const cs = document.getElementById('f-cat');
   cs.innerHTML = '<option value="All">All</option>';
-  cats.forEach(c => { const opt = document.createElement('option'); opt.value=c; opt.textContent=c; cs.appendChild(opt); });
+  cats.forEach(c => { const opt=document.createElement('option'); opt.value=c; opt.textContent=c; cs.appendChild(opt); });
 }
 
+// tasks for the bottom Task List — respects dropdowns + quick filter,
+// and includes Parked tasks by default (pushed to bottom by sort logic)
 function filtered() {
   const o = document.getElementById('f-owner').value;
   const c = document.getElementById('f-cat').value;
   const s = document.getElementById('f-status').value;
-  return ALL.filter(t =>
+  let list = ALL.filter(t =>
     (o==='All' || t.owner===o) &&
     (c==='All' || t.cat===c)   &&
     (s==='All' || t.status===s)
   );
+  if      (QUICK==='pendongoing') list = list.filter(isPendingOrOngoing);
+  else if (QUICK==='overdue')     list = list.filter(isOverdue);
+  else if (QUICK==='nodate')      list = list.filter(isNoDate);
+  else if (QUICK==='noowner')     list = list.filter(isNoOwner);
+  else if (QUICK==='parked')      list = list.filter(t=>t.status==='Parked');
+  return list;
+}
+
+// tasks for KPIs / breakdown / exceptions — always excludes Parked,
+// since parked ideas aren't part of active campaign tracking
+function kpiTasks() {
+  return filtered().filter(t => t.status !== 'Parked');
+}
+
+// ── QUICK FILTER (replaces old modal popups — filters + scrolls to table) ───
+function quickFilter(opts) {
+  if (opts.owner  !== undefined) document.getElementById('f-owner').value  = opts.owner;
+  if (opts.cat    !== undefined) document.getElementById('f-cat').value    = opts.cat;
+  document.getElementById('f-status').value = opts.status || 'All';
+  QUICK = opts.quick || null;
+  render();
+  document.getElementById('tbl-wrap').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function clearQuickFilter() {
+  QUICK = null;
+  document.getElementById('f-status').value = 'All';
+  render();
+}
+
+const QUICK_LABELS = {
+  pendongoing: 'Pending / Ongoing',
+  overdue: 'Overdue',
+  nodate: 'No due date',
+  noowner: 'No owner',
+  parked: 'Parked ideas',
+};
+
+function updateActiveFilterBar() {
+  const bar = document.getElementById('active-filter-bar');
+  if (!QUICK) { bar.classList.remove('show'); return; }
+  document.getElementById('af-chip-text').textContent = QUICK_LABELS[QUICK] || QUICK;
+  bar.classList.add('show');
 }
 
 // ── RENDER ───────────────────────────────────────────────────────────────────
 function render() {
-  const tasks = filtered();
+  const kt = kpiTasks();
   const owner = document.getElementById('f-owner').value;
-  renderKPIs(tasks);
-  renderExceptions(tasks);
-  renderBreakdown(tasks, owner);
+  renderKPIs(kt);
+  renderExceptions(kt);
+  renderBreakdown(kt, owner);
   renderTaskList();
+  updateActiveFilterBar();
+
+  const parkedCount = ALL.filter(t=>t.status==='Parked').length;
+  document.getElementById('parked-count').textContent = parkedCount;
+  document.getElementById('parked-link-row').style.display = parkedCount>0 ? 'flex' : 'none';
+
   document.getElementById('tbl-title').textContent = owner==='All' ? 'All tasks' : `Tasks — ${owner}`;
-  document.getElementById('bkd-section').style.display = '';
 }
 
 // ── KPIs ─────────────────────────────────────────────────────────────────────
@@ -817,12 +880,10 @@ function renderKPIs(tasks) {
   document.getElementById('k-noowner').textContent = tasks.filter(isNoOwner).length;
 }
 
-// joins non-empty parts with " · ", skipping blanks so missing fields don't leave stray dots
 function metaParts(...parts) { return parts.filter(Boolean).join(' · '); }
 
 // ── EXCEPTIONS ───────────────────────────────────────────────────────────────
 function renderExceptions(tasks) {
-  // Overdue
   const ovrd = tasks.filter(isOverdue).sort((a,b) => effDate(a)-effDate(b));
   document.getElementById('ex-ovrd-count').textContent = ovrd.length;
   const ob = document.getElementById('ex-ovrd-body');
@@ -847,7 +908,6 @@ function renderExceptions(tasks) {
         </div>`;
       }).join('');
 
-  // Incomplete data — no owner first, then no due date (excluding those already in no-owner)
   const noOwner   = tasks.filter(isNoOwner);
   const noDueOnly = tasks.filter(isNoDueDateOnly);
   const total = noOwner.length + noDueOnly.length;
@@ -858,9 +918,7 @@ function renderExceptions(tasks) {
     ib.innerHTML = '<div class="exc-empty">All tasks have owner and due date.</div>';
     return;
   }
-
   let html = '';
-
   if (noOwner.length > 0) {
     html += `<div class="exc-sub-hdr">No owner (${noOwner.length})</div>`;
     html += noOwner.map(t => `<div class="exc-row">
@@ -875,7 +933,6 @@ function renderExceptions(tasks) {
       </div>
     </div>`).join('');
   }
-
   if (noDueOnly.length > 0) {
     html += `<div class="exc-sub-hdr">No due date (${noDueOnly.length})</div>`;
     html += noDueOnly.map(t => `<div class="exc-row">
@@ -890,13 +947,11 @@ function renderExceptions(tasks) {
       </div>
     </div>`).join('');
   }
-
   ib.innerHTML = html;
 }
 
 // ── BREAKDOWN ────────────────────────────────────────────────────────────────
 function renderBreakdown(tasks, selectedOwner) {
-  // person
   const owners = selectedOwner==='All'
     ? [...new Set(tasks.map(t=>t.owner).filter(Boolean))].sort()
     : [selectedOwner];
@@ -907,14 +962,13 @@ function renderBreakdown(tasks, selectedOwner) {
     const ovrd=ot.filter(isOverdue).length;
     return `<tr>
       <td class="td-owner">${esc(o)}</td>
-      <td>${nl(ot.length,'owner-all',o)}</td>
-      <td>${nl(pend,'owner-pendongoing',o)}</td>
-      <td class="bkd-hide-mobile">${nl(bloc,'owner-status',o+':Blocked')}</td>
-      <td>${ovrd>0 ? no(ovrd,'owner-ovrd',o) : '<span class="n-zero">0</span>'}</td>
+      <td>${nl(ot.length,{owner:o})}</td>
+      <td>${nl(pend,{owner:o,quick:'pendongoing'})}</td>
+      <td class="bkd-hide-mobile">${nl(bloc,{owner:o,status:'Blocked'})}</td>
+      <td>${ovrd>0 ? no(ovrd,{owner:o,quick:'overdue'}) : '<span class="n-zero">0</span>'}</td>
     </tr>`;
   }).join('');
 
-  // category
   const cats = [...new Set(tasks.map(t=>t.cat).filter(Boolean))].sort();
   document.getElementById('bkd-cat').innerHTML = cats.map(c => {
     const ct = tasks.filter(t=>t.cat===c);
@@ -923,20 +977,20 @@ function renderBreakdown(tasks, selectedOwner) {
     const ovrd=ct.filter(isOverdue).length;
     return `<tr>
       <td class="td-cat">${esc(c)}</td>
-      <td>${nl(ct.length,'cat-all',c)}</td>
-      <td>${nl(pend,'cat-pendongoing',c)}</td>
-      <td class="bkd-hide-mobile">${nl(bloc,'cat-status',c+':Blocked')}</td>
-      <td>${ovrd>0 ? no(ovrd,'cat-ovrd',c) : '<span class="n-zero">0</span>'}</td>
+      <td>${nl(ct.length,{cat:c})}</td>
+      <td>${nl(pend,{cat:c,quick:'pendongoing'})}</td>
+      <td class="bkd-hide-mobile">${nl(bloc,{cat:c,status:'Blocked'})}</td>
+      <td>${ovrd>0 ? no(ovrd,{cat:c,quick:'overdue'}) : '<span class="n-zero">0</span>'}</td>
     </tr>`;
   }).join('');
 }
 
-function nl(n, type, key) {
+function nl(n, opts) {
   if (n===0) return '<span class="n-zero">0</span>';
-  return `<span class="n-link" onclick="openModal('${type}','${encodeURIComponent(key)}')">${n}</span>`;
+  return `<span class="n-link" onclick='quickFilter(${JSON.stringify(opts)})'>${n}</span>`;
 }
-function no(n, type, key) {
-  return `<span class="n-ovrd" onclick="openModal('${type}','${encodeURIComponent(key)}')">${n}</span>`;
+function no(n, opts) {
+  return `<span class="n-ovrd" onclick='quickFilter(${JSON.stringify(opts)})'>${n}</span>`;
 }
 
 // ── TASK LIST ────────────────────────────────────────────────────────────────
@@ -946,22 +1000,24 @@ function renderTaskList() {
   if (pri !== 'All') tasks = tasks.filter(t=>t.priority===pri);
 
   const priO = {High:0,Medium:1,Low:2,'':3};
+  // rank: active tasks first, then Done, then Parked always last
+  const rank = t => t.status==='Parked' ? 2 : (t.status==='Done' ? 1 : 0);
   tasks.sort((a,b) => {
-    const ao=isOverdue(a), bo=isOverdue(b);
-    if (ao&&!bo) return -1; if (!ao&&bo) return 1;
-    const ad=effDate(a), bd=effDate(b);
-    if (a.status!=='Done'&&b.status!=='Done') {
+    const ra=rank(a), rb=rank(b);
+    if (ra!==rb) return ra-rb;
+    if (ra===0) {
+      const ao=isOverdue(a), bo=isOverdue(b);
+      if (ao&&!bo) return -1; if (!ao&&bo) return 1;
+      const ad=effDate(a), bd=effDate(b);
       if (ad&&bd) return ad-bd;
       if (ad) return -1; if (bd) return 1;
+      return (priO[a.priority]||3)-(priO[b.priority]||3);
     }
-    if (a.status==='Done'&&b.status!=='Done') return 1;
-    if (a.status!=='Done'&&b.status==='Done') return -1;
-    return (priO[a.priority]||3)-(priO[b.priority]||3);
+    return 0;
   });
 
   document.getElementById('tbl-count').textContent = `${tasks.length} task${tasks.length!==1?'s':''}`;
 
-  // Desktop table
   const tb = document.getElementById('tbl-body');
   if (tasks.length===0) {
     tb.innerHTML = `<tr><td colspan="${8+EXTRA.length}"><div class="empty-state">No tasks match the current filters.</div></td></tr>`;
@@ -970,12 +1026,13 @@ function renderTaskList() {
       const over = isOverdue(t);
       const nodt = isNoDate(t);
       const nown = isNoOwner(t);
+      const parked = t.status==='Parked';
       const ed   = effDate(t);
       const days = (over&&ed) ? Math.floor((TODAY-ed)/86400000) : 0;
       const dueTxt = t.due && !isNaN(t.due) ? fmt(t.due) : `<span style="color:var(--amber);font-weight:600">No date</span>`;
       const revTxt = t.revised && !isNaN(t.revised) ? fmt(t.revised) : '—';
       const extraCells = t.extraVals.map(v => `<td class="col-extra">${escNl(v)||'—'}</td>`).join('');
-      return `<tr class="${over?'row-overdue':''}">
+      return `<tr class="${over?'row-overdue':''} ${parked?'row-parked':''}">
         <td class="td-cat col-cat">${esc(t.cat)||'—'}</td>
         <td class="td-task">${esc(t.task)}
           ${over  ? `<span class="tag-overdue">${days}d</span>` : ''}
@@ -993,17 +1050,17 @@ function renderTaskList() {
     }).join('');
   }
 
-  // Mobile cards
   const cb = document.getElementById('card-body');
   if (tasks.length===0) {
     cb.innerHTML = '<div class="empty-state">No tasks match the current filters.</div>';
   } else {
     cb.innerHTML = tasks.map((t,i) => {
       const over = isOverdue(t);
+      const parked = t.status==='Parked';
       const ed   = effDate(t);
       const days = (over&&ed) ? Math.floor((TODAY-ed)/86400000) : 0;
       const dateStr = t.revised&&!isNaN(t.revised) ? `Rev: ${fmt(t.revised)}` : (t.due&&!isNaN(t.due) ? fmt(t.due) : 'No date');
-      return `<div class="task-card ${over?'tc-overdue':''}" onclick="openDetailModal(${i})">
+      return `<div class="task-card ${over?'tc-overdue':''} ${parked?'tc-parked':''}" onclick="openDetailModal(${i})">
         <div class="tc-top">
           <div class="tc-task">${esc(t.task)}${over?`<span class="tag-overdue">${days}d</span>`:''}</div>
           <span class="status-pill sp-${t.status}"><span class="s-dot"></span>${t.status}</span>
@@ -1017,11 +1074,26 @@ function renderTaskList() {
       </div>`;
     }).join('');
   }
-  // store sorted tasks for detail modal reference
   window._sortedTasks = tasks;
 }
 
-// ── DETAIL MODAL (mobile) ────────────────────────────────────────────────────
+// ── NOTES ────────────────────────────────────────────────────────────────────
+function renderNotes(notes) {
+  const body = document.getElementById('notes-body');
+  if (!notes || notes.length === 0) {
+    body.innerHTML = '<div class="notes-empty">No notes added yet.</div>';
+    return;
+  }
+  body.innerHTML = notes.map(n => `
+    <div class="notes-item">
+      <div class="notes-item-h">${esc(n.heading)}</div>
+      ${n.detail ? `<div class="notes-item-d">${escNl(n.detail)}</div>` : ''}
+    </div>
+  `).join('');
+}
+function toggleNotes() { document.getElementById('notes-card').classList.toggle('open'); }
+
+// ── DETAIL MODAL (mobile task tap) ───────────────────────────────────────────
 function openDetailModal(idx) {
   const t = window._sortedTasks[idx];
   if (!t) return;
@@ -1044,60 +1116,15 @@ function openDetailModal(idx) {
   `;
   document.getElementById('detail-modal').classList.add('open');
 }
-
-// ── LIST MODAL ───────────────────────────────────────────────────────────────
-function openModal(type, rawKey) {
-  const key = decodeURIComponent(rawKey);
-  let tasks = [], title = '';
-  const base = filtered();
-
-  if      (type==='all')          { tasks=base; title='All tasks'; }
-  else if (type==='status')       { tasks=base.filter(t=>t.status===key); title=`${key} tasks`; }
-  else if (type==='pendongoing')  { tasks=base.filter(isPendingOrOngoing); title='Pending / Ongoing tasks'; }
-  else if (type==='overdue')      { tasks=base.filter(isOverdue); title='Overdue tasks'; }
-  else if (type==='nodate')       { tasks=base.filter(isNoDate);  title='Tasks with no due date'; }
-  else if (type==='noowner')      { tasks=base.filter(isNoOwner); title='Tasks with no owner'; }
-  else if (type==='owner-all')    { tasks=ALL.filter(t=>t.owner===key); title=`All tasks — ${key}`; }
-  else if (type==='owner-status') { const [o,s]=key.split(':'); tasks=ALL.filter(t=>t.owner===o&&t.status===s); title=`${s} — ${o}`; }
-  else if (type==='owner-pendongoing') { tasks=ALL.filter(t=>t.owner===key&&isPendingOrOngoing(t)); title=`Pending / Ongoing — ${key}`; }
-  else if (type==='owner-ovrd')   { tasks=ALL.filter(t=>t.owner===key&&isOverdue(t)); title=`Overdue — ${key}`; }
-  else if (type==='cat-all')      { tasks=ALL.filter(t=>t.cat===key); title=`All tasks — ${key}`; }
-  else if (type==='cat-status')   { const [c,s]=key.split(':'); tasks=ALL.filter(t=>t.cat===c&&t.status===s); title=`${s} — ${c}`; }
-  else if (type==='cat-pendongoing') { tasks=ALL.filter(t=>t.cat===key&&isPendingOrOngoing(t)); title=`Pending / Ongoing — ${key}`; }
-  else if (type==='cat-ovrd')     { tasks=ALL.filter(t=>t.cat===key&&isOverdue(t)); title=`Overdue — ${key}`; }
-
-  document.getElementById('list-modal-title').textContent = `${title} (${tasks.length})`;
-  const tb = document.getElementById('list-modal-body');
-  tb.innerHTML = tasks.length===0
-    ? `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted);">No tasks found.</td></tr>`
-    : tasks.map(t => {
-        const over=isOverdue(t); const ed=effDate(t);
-        const days=(over&&ed)?Math.floor((TODAY-ed)/86400000):0;
-        return `<tr>
-          <td class="td-cat col-cat">${esc(t.cat)||'—'}</td>
-          <td class="td-task">${esc(t.task)}${over?`<span class="tag-overdue">${days}d</span>`:''}</td>
-          <td class="td-owner col-owner">${esc(t.owner)||'—'}</td>
-          <td class="td-date">${fmt(effDate(t))}</td>
-          <td class="col-priority"><span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span></td>
-          <td><span class="status-pill sp-${t.status}"><span class="s-dot"></span>${t.status}</span></td>
-          <td class="td-rem col-remarks">${escNl(t.remarks)||'—'}</td>
-        </tr>`;
-      }).join('');
-
-  document.getElementById('list-modal').classList.add('open');
-}
-
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 function closeModalOutside(e, id) { if (e.target===document.getElementById(id)) closeModal(id); }
-document.addEventListener('keydown', e => { if (e.key==='Escape') { closeModal('list-modal'); closeModal('detail-modal'); } });
+document.addEventListener('keydown', e => { if (e.key==='Escape') closeModal('detail-modal'); });
 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 function esc(s) {
   if (!s) return '';
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-// Escapes text AND converts embedded line breaks (e.g. multi-line Remarks
-// entered with Ctrl+Enter in Sheets) into visible <br> tags.
 function escNl(s) { return esc(s).replace(/\n/g, '<br>'); }
 
 function showError() {
@@ -1116,7 +1143,7 @@ function showError() {
 
 // ── EVENTS & INIT ────────────────────────────────────────────────────────────
 ['f-owner','f-cat','f-status'].forEach(id =>
-  document.getElementById(id).addEventListener('change', render)
+  document.getElementById(id).addEventListener('change', () => { QUICK=null; render(); })
 );
 
 loadData();
