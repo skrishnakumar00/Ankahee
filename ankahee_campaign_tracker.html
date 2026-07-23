@@ -86,6 +86,32 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 }
 .sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
+/* ── CAMPAIGN PROGRESS (rings) ── */
+.progress-card {
+  background: var(--white); border-radius: 10px; border: 1.5px solid var(--border);
+  padding: 18px 20px; margin-bottom: 4px;
+}
+.progress-headline {
+  display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px;
+  padding-bottom: 14px; border-bottom: 1px solid var(--border);
+}
+.progress-headline-num { font-size: 26px; font-weight: 700; color: var(--teal-dark); }
+.progress-headline-txt { font-size: 12.5px; color: var(--muted); }
+.progress-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 18px;
+}
+.ring-item { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.ring-svg { width: 84px; height: 84px; }
+.ring-bg { fill: none; stroke: var(--slate-light); stroke-width: 8; }
+.ring-fg { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.4s ease; }
+.ring-pct { font-size: 16px; font-weight: 700; }
+.ring-label { font-size: 11px; font-weight: 600; color: var(--text); margin-top: 8px; line-height: 1.3; }
+.ring-desc { font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+.ring-count { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+.ring-check { font-size: 11px; }
+.progress-empty { font-size: 12px; color: var(--muted); padding: 6px 0; }
+
 /* ── NOTES ── */
 .notes-card {
   background: var(--white); border-radius: 10px; border: 1.5px solid var(--border);
@@ -145,65 +171,6 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 .kpi-nodate  .kpi-num { color: var(--amber); }
 .kpi-noowner .kpi-bar { background: var(--amber); }
 .kpi-noowner .kpi-num { color: var(--amber); }
-
-/* ── EXCEPTIONS ── */
-.exc-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-}
-.exc-card {
-  background: var(--white); border-radius: 10px;
-  border: 1.5px solid var(--border); overflow: hidden;
-}
-.exc-card.exc-overdue  { border-color: var(--coral-mid); }
-.exc-card.exc-incomplete { border-color: var(--amber-mid); }
-
-.exc-hdr {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 11px 14px;
-}
-.exc-overdue   .exc-hdr { background: var(--coral-light); }
-.exc-incomplete .exc-hdr { background: var(--amber-light); }
-
-.exc-hdr-title { font-size: 12px; font-weight: 700; }
-.exc-overdue   .exc-hdr-title { color: var(--coral); }
-.exc-incomplete .exc-hdr-title { color: var(--amber); }
-
-.exc-badge {
-  font-size: 13px; font-weight: 700;
-  padding: 2px 10px; border-radius: 12px; color: var(--white);
-}
-.exc-overdue   .exc-badge { background: var(--coral); }
-.exc-incomplete .exc-badge { background: var(--amber); }
-
-.exc-body { max-height: 260px; overflow-y: auto; }
-
-/* sub-section inside incomplete card */
-.exc-sub-hdr {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
-  text-transform: uppercase; color: var(--muted);
-  padding: 8px 14px 4px; background: var(--slate-light);
-  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
-}
-.exc-sub-hdr:first-child { border-top: none; }
-
-.exc-row {
-  display: flex; align-items: flex-start; gap: 8px;
-  padding: 9px 14px; border-bottom: 1px solid var(--border);
-  font-size: 12px;
-}
-.exc-row:last-child { border-bottom: none; }
-.exc-row:hover { background: var(--slate-light); }
-
-.exc-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
-.exc-overdue   .exc-dot { background: var(--coral); }
-.exc-incomplete .exc-dot { background: var(--amber); }
-
-.exc-info { flex: 1; min-width: 0; }
-.exc-task { font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.exc-meta { color: var(--muted); font-size: 11px; margin-top: 2px; }
-.exc-owner-name { font-weight: 600; color: var(--teal-dark); }
-.exc-days  { color: var(--coral); font-weight: 600; }
-.exc-empty { padding: 18px 14px; font-size: 12px; color: var(--muted); text-align: center; }
 
 /* ── BREAKDOWN ── */
 .breakdown-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -364,7 +331,6 @@ body.hide-owner .col-owner { display: none !important; }
   main { padding: 16px 12px 50px; }
 
   .kpi-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .exc-grid { grid-template-columns: 1fr; }
   .breakdown-grid { grid-template-columns: 1fr; }
   .bkd-hide-mobile { display: none; }
 
@@ -428,6 +394,16 @@ body.hide-owner .col-owner { display: none !important; }
     </div>
   </div>
 
+  <!-- CAMPAIGN PROGRESS -->
+  <div class="sec-label">Campaign Progress</div>
+  <div class="progress-card" id="progress-card" style="display:none;">
+    <div class="progress-headline">
+      <span class="progress-headline-num" id="prog-headline-num">—</span>
+      <span class="progress-headline-txt" id="prog-headline-txt">activities completed overall</span>
+    </div>
+    <div class="progress-grid" id="progress-grid"></div>
+  </div>
+
   <!-- KPI ROW 1: STATUS -->
   <div class="sec-label">Status</div>
   <div class="kpi-row">
@@ -464,29 +440,6 @@ body.hide-owner .col-owner { display: none !important; }
 
   <div class="parked-link-row" id="parked-link-row" style="display:none;">
     <span class="parked-link" onclick="quickFilter({quick:'parked'})">📌 <span id="parked-count">0</span> parked ideas — view →</span>
-  </div>
-
-  <!-- EXCEPTIONS -->
-  <div class="sec-label">Exceptions</div>
-  <div class="exc-grid">
-    <div class="exc-card exc-overdue">
-      <div class="exc-hdr">
-        <span class="exc-hdr-title">⚠ Overdue tasks</span>
-        <span class="exc-badge" id="ex-ovrd-count">0</span>
-      </div>
-      <div class="exc-body" id="ex-ovrd-body">
-        <div class="exc-empty">No overdue tasks — great work!</div>
-      </div>
-    </div>
-    <div class="exc-card exc-incomplete">
-      <div class="exc-hdr">
-        <span class="exc-hdr-title">◉ Incomplete data</span>
-        <span class="exc-badge" id="ex-inc-count">0</span>
-      </div>
-      <div class="exc-body" id="ex-inc-body">
-        <div class="exc-empty">All tasks have owner and due date.</div>
-      </div>
-    </div>
   </div>
 
   <!-- BREAKDOWN -->
@@ -591,6 +544,17 @@ const NOTES_ALIASES = {
   detail:  ['detail','details','description','notes'],
 };
 
+// Targets tab: File → Share → Publish to web → Targets tab → CSV → paste URL below.
+// Columns expected: Category, Target, Actual. Actual is manually updated by
+// the team as activities are completed (not derived from the Tasks tab).
+const TARGETS_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSxUJ2mtcQb2NeAEDntqCYPKsbkiSd8LYqiGEEpbp4nfnDnOIpVu0iZhtD0NMxDcrUBfrNmsRMcc3vl/pub?gid=1362655741&single=true&output=csv';
+const TARGETS_ALIASES = {
+  cat:    ['category'],
+  target: ['target','planned'],
+  actual: ['actual','done','completed'],
+  desc:   ['description','desc','details'],
+};
+
 let COL = {};
 let HAS = {};
 let EXTRA = [];
@@ -667,6 +631,12 @@ async function loadData() {
     if (notesText) renderNotes(parseNotesCSV(notesText));
   }
 
+  // Targets — best-effort, silent on failure
+  if (TARGETS_CSV_URL) {
+    const targetsText = await fetchViaProxies(TARGETS_CSV_URL);
+    if (targetsText) renderProgress(parseTargetsCSV(targetsText));
+  }
+
   document.getElementById('loading').style.display = 'none';
 }
 
@@ -730,6 +700,22 @@ function parseNotesCSV(text) {
     const heading = get(rows[i], 'heading');
     if (!heading) continue;
     out.push({ heading, detail: get(rows[i], 'detail') });
+  }
+  return out;
+}
+
+function parseTargetsCSV(text) {
+  const rows = tokenizeCSV(text.trim());
+  if (rows.length < 2) return [];
+  const col = detectColumns(rows[0], TARGETS_ALIASES);
+  const get = (cells, field) => col[field] >= 0 ? (cells[col[field]]||'').trim() : '';
+  const out = [];
+  for (let i = 1; i < rows.length; i++) {
+    const cat = get(rows[i], 'cat');
+    if (!cat) continue;
+    const target = parseFloat(get(rows[i], 'target')) || 0;
+    const actual = parseFloat(get(rows[i], 'actual')) || 0;
+    out.push({ cat, target, actual, desc: get(rows[i], 'desc') });
   }
   return out;
 }
@@ -870,7 +856,6 @@ function render() {
   const kt = kpiTasks();
   const owner = document.getElementById('f-owner').value;
   renderKPIs(kt);
-  renderExceptions(kt);
   renderBreakdown(kt, owner);
   renderTaskList();
   updateActiveFilterBar();
@@ -894,73 +879,46 @@ function renderKPIs(tasks) {
 
 function metaParts(...parts) { return parts.filter(Boolean).join(' · '); }
 
-// ── EXCEPTIONS ───────────────────────────────────────────────────────────────
-function renderExceptions(tasks) {
-  const ovrd = tasks.filter(isOverdue).sort((a,b) => effDate(a)-effDate(b));
-  document.getElementById('ex-ovrd-count').textContent = ovrd.length;
-  const ob = document.getElementById('ex-ovrd-body');
-  ob.innerHTML = ovrd.length === 0
-    ? '<div class="exc-empty">No overdue tasks — great work!</div>'
-    : ovrd.map(t => {
-        const d = effDate(t);
-        const days = Math.floor((TODAY - d) / 86400000);
-        return `<div class="exc-row">
-          <div class="exc-dot"></div>
-          <div class="exc-info">
-            <div class="exc-task">${esc(t.task)}</div>
-            <div class="exc-meta">
-              ${metaParts(
-                HAS.owner ? `<span class="exc-owner-name">${esc(t.owner)||'—'}</span>` : '',
-                HAS.cat ? esc(t.cat) : '',
-                `<span class="exc-days">${days}d overdue</span>`,
-                HAS.priority ? `<span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span>` : ''
-              )}
-            </div>
-          </div>
-        </div>`;
-      }).join('');
-
-  const noOwner   = tasks.filter(isNoOwner);
-  const noDueOnly = tasks.filter(isNoDueDateOnly);
-  const total = noOwner.length + noDueOnly.length;
-  document.getElementById('ex-inc-count').textContent = total;
-
-  const ib = document.getElementById('ex-inc-body');
-  if (total === 0) {
-    ib.innerHTML = '<div class="exc-empty">All tasks have owner and due date.</div>';
-    return;
-  }
-  let html = '';
-  if (noOwner.length > 0) {
-    html += `<div class="exc-sub-hdr">No owner (${noOwner.length})</div>`;
-    html += noOwner.map(t => `<div class="exc-row">
-      <div class="exc-dot"></div>
-      <div class="exc-info">
-        <div class="exc-task">${esc(t.task)}</div>
-        <div class="exc-meta">${metaParts(
-          HAS.cat ? esc(t.cat) : '',
-          HAS.due ? (t.due ? fmt(t.due) : '<span style="color:var(--amber)">no date either</span>') : '',
-          HAS.priority ? `<span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span>` : ''
-        )}</div>
-      </div>
-    </div>`).join('');
-  }
-  if (noDueOnly.length > 0) {
-    html += `<div class="exc-sub-hdr">No due date (${noDueOnly.length})</div>`;
-    html += noDueOnly.map(t => `<div class="exc-row">
-      <div class="exc-dot"></div>
-      <div class="exc-info">
-        <div class="exc-task">${esc(t.task)}</div>
-        <div class="exc-meta">${metaParts(
-          HAS.owner ? `<span class="exc-owner-name">${esc(t.owner)}</span>` : '',
-          HAS.cat ? esc(t.cat) : '',
-          HAS.priority ? `<span class="pri-pill pr-${t.priority}">${t.priority||'—'}</span>` : ''
-        )}</div>
-      </div>
-    </div>`).join('');
-  }
-  ib.innerHTML = html;
+// ── CAMPAIGN PROGRESS (rings) ───────────────────────────────────────────────
+function ringColor(pct) {
+  if (pct >= 100) return '#2e7d4f';
+  if (pct >= 40)  return 'var(--teal)';
+  return 'var(--amber)';
 }
+
+function renderProgress(rows) {
+  const card = document.getElementById('progress-card');
+  if (!rows || rows.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  const totalTarget = rows.reduce((s,r)=>s+r.target, 0);
+  const totalActual = rows.reduce((s,r)=>s+r.actual, 0);
+  const overallPct = totalTarget>0 ? Math.round((totalActual/totalTarget)*100) : 0;
+  document.getElementById('prog-headline-num').textContent = `${totalActual} of ${totalTarget}`;
+  document.getElementById('prog-headline-txt').textContent =
+    `activities completed overall — ${overallPct}%`;
+
+  const R = 34, C = 2*Math.PI*R;
+  document.getElementById('progress-grid').innerHTML = rows.map(r => {
+    const pct = r.target>0 ? Math.min(100, (r.actual/r.target)*100) : 0;
+    const offset = C - (pct/100)*C;
+    const color = ringColor(pct);
+    const complete = r.target>0 && r.actual >= r.target;
+    return `<div class="ring-item">
+      <svg class="ring-svg" viewBox="0 0 84 84">
+        <circle class="ring-bg" cx="42" cy="42" r="${R}"></circle>
+        <circle class="ring-fg" cx="42" cy="42" r="${R}" stroke="${color}"
+          stroke-dasharray="${C}" stroke-dashoffset="${offset}"
+          transform="rotate(-90 42 42)"></circle>
+        <text x="42" y="47" text-anchor="middle" class="ring-pct" fill="${color}">${Math.round(pct)}%</text>
+      </svg>
+      <div class="ring-label">${esc(r.cat)}${complete ? ' <span class="ring-check">✓</span>' : ''}</div>
+      ${r.desc ? `<div class="ring-desc">${esc(r.desc)}</div>` : ''}
+      <div class="ring-count">${r.actual} of ${r.target}</div>
+    </div>`;
+  }).join('');
+}
+
 
 // ── BREAKDOWN ────────────────────────────────────────────────────────────────
 function renderBreakdown(tasks, selectedOwner) {
