@@ -93,10 +93,19 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 }
 .progress-headline {
   display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px;
-  padding-bottom: 14px; border-bottom: 1px solid var(--border);
+  padding-bottom: 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap;
 }
 .progress-headline-num { font-size: 26px; font-weight: 700; color: var(--teal-dark); }
-.progress-headline-txt { font-size: 12.5px; color: var(--muted); }
+.progress-headline-txt { font-size: 12.5px; color: var(--muted); flex: 1; }
+.countdown-badge {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  background: var(--slate-light); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 12px; white-space: nowrap;
+  align-self: center; transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.countdown-badge.cd-soon  { background: var(--amber-light); color: var(--amber); border-color: var(--amber-mid); }
+.countdown-badge.cd-today { background: var(--coral-light); color: var(--coral); border-color: var(--coral-mid); }
+.countdown-badge.cd-past  { background: var(--slate-light); color: var(--muted); border-color: var(--border); }
 .progress-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 18px;
@@ -399,52 +408,51 @@ body.hide-owner .col-owner { display: none !important; }
   <div class="progress-card" id="progress-card" style="display:none;">
     <div class="progress-headline">
       <span class="progress-headline-num" id="prog-headline-num">—</span>
-      <span class="progress-headline-txt" id="prog-headline-txt">activities completed overall</span>
+      <span class="progress-headline-txt" id="prog-headline-txt">completed overall</span>
+      <span class="countdown-badge" id="countdown-badge">—</span>
     </div>
     <div class="progress-grid" id="progress-grid"></div>
   </div>
 
-  <!-- KPI ROW 1: STATUS -->
-  <div class="sec-label">Status</div>
-  <div class="kpi-row">
-    <div class="kpi-card kpi-total"   onclick="quickFilter({})">
-      <div class="kpi-bar"></div><div class="kpi-lbl">Total Tasks</div>
-      <div class="kpi-num" id="k-total">—</div><div class="kpi-hint">tap to view</div>
+  <!-- STATUS KPIs — hidden for now, to avoid confusion with Campaign Progress goal counts.
+       Code kept intact so this can be re-enabled later by removing display:none below. -->
+  <div id="status-kpi-section" style="display:none;">
+    <div class="sec-label">Status</div>
+    <div class="kpi-row">
+      <div class="kpi-card kpi-total"   onclick="quickFilter({})">
+        <div class="kpi-bar"></div><div class="kpi-lbl">Total Tasks</div>
+        <div class="kpi-num" id="k-total">—</div><div class="kpi-hint">tap to view</div>
+      </div>
+      <div class="kpi-card kpi-pending" onclick="quickFilter({quick:'pendongoing'})">
+        <div class="kpi-bar"></div><div class="kpi-lbl">Pending/Ongoing</div>
+        <div class="kpi-num" id="k-pending">—</div><div class="kpi-hint">tap to view</div>
+      </div>
+      <div class="kpi-card kpi-blocked" onclick="quickFilter({status:'Blocked'})">
+        <div class="kpi-bar"></div><div class="kpi-lbl">Blocked</div>
+        <div class="kpi-num" id="k-blocked">—</div><div class="kpi-hint">tap to view</div>
+      </div>
     </div>
-    <div class="kpi-card kpi-pending" onclick="quickFilter({quick:'pendongoing'})">
-      <div class="kpi-bar"></div><div class="kpi-lbl">Pending/Ongoing</div>
-      <div class="kpi-num" id="k-pending">—</div><div class="kpi-hint">tap to view</div>
-    </div>
-    <div class="kpi-card kpi-blocked" onclick="quickFilter({status:'Blocked'})">
-      <div class="kpi-bar"></div><div class="kpi-lbl">Blocked</div>
-      <div class="kpi-num" id="k-blocked">—</div><div class="kpi-hint">tap to view</div>
-    </div>
-  </div>
 
-  <!-- KPI ROW 2: NEEDS ATTENTION -->
-  <div class="sec-label" style="margin-top:14px;">Needs attention</div>
-  <div class="kpi-row">
-    <div class="kpi-card kpi-overdue" onclick="quickFilter({quick:'overdue'})">
-      <div class="kpi-bar"></div><div class="kpi-lbl">Overdue</div>
-      <div class="kpi-num" id="k-overdue">—</div><div class="kpi-hint">date elapsed, not done</div>
+    <div class="sec-label" style="margin-top:14px;">Needs attention</div>
+    <div class="kpi-row">
+      <div class="kpi-card kpi-overdue" onclick="quickFilter({quick:'overdue'})">
+        <div class="kpi-bar"></div><div class="kpi-lbl">Overdue</div>
+        <div class="kpi-num" id="k-overdue">—</div><div class="kpi-hint">date elapsed, not done</div>
+      </div>
+      <div class="kpi-card kpi-nodate"  onclick="quickFilter({quick:'nodate'})">
+        <div class="kpi-bar"></div><div class="kpi-lbl">No Due Date</div>
+        <div class="kpi-num" id="k-nodate">—</div><div class="kpi-hint">active, date missing</div>
+      </div>
+      <div class="kpi-card kpi-noowner col-owner" onclick="quickFilter({quick:'noowner'})">
+        <div class="kpi-bar"></div><div class="kpi-lbl">No Owner</div>
+        <div class="kpi-num" id="k-noowner">—</div><div class="kpi-hint">nobody assigned</div>
+      </div>
     </div>
-    <div class="kpi-card kpi-nodate"  onclick="quickFilter({quick:'nodate'})">
-      <div class="kpi-bar"></div><div class="kpi-lbl">No Due Date</div>
-      <div class="kpi-num" id="k-nodate">—</div><div class="kpi-hint">active, date missing</div>
-    </div>
-    <div class="kpi-card kpi-noowner col-owner" onclick="quickFilter({quick:'noowner'})">
-      <div class="kpi-bar"></div><div class="kpi-lbl">No Owner</div>
-      <div class="kpi-num" id="k-noowner">—</div><div class="kpi-hint">nobody assigned</div>
-    </div>
-  </div>
-
-  <div class="parked-link-row" id="parked-link-row" style="display:none;">
-    <span class="parked-link" onclick="quickFilter({quick:'parked'})">📌 <span id="parked-count">0</span> parked ideas — view →</span>
   </div>
 
   <!-- BREAKDOWN -->
   <div id="bkd-section">
-    <div class="sec-label">Breakdown</div>
+    <div class="sec-label">Task Breakdown</div>
     <div class="breakdown-grid">
       <div class="bkd-card col-owner">
         <div class="bkd-hdr">By Person</div>
@@ -467,6 +475,11 @@ body.hide-owner .col-owner { display: none !important; }
         </table>
       </div>
     </div>
+  </div>
+
+  <!-- TASK LIST -->
+  <div class="parked-link-row" id="parked-link-row" style="display:none;">
+    <span class="parked-link" onclick="quickFilter({quick:'parked'})">📌 <span id="parked-count">0</span> parked ideas — view →</span>
   </div>
 
   <!-- TASK LIST -->
@@ -896,7 +909,8 @@ function renderProgress(rows) {
   const overallPct = totalTarget>0 ? Math.round((totalActual/totalTarget)*100) : 0;
   document.getElementById('prog-headline-num').textContent = `${totalActual} of ${totalTarget}`;
   document.getElementById('prog-headline-txt').textContent =
-    `activities completed overall — ${overallPct}%`;
+    `completed overall — ${overallPct}%`;
+  renderCountdown();
 
   const R = 34, C = 2*Math.PI*R;
   document.getElementById('progress-grid').innerHTML = rows.map(r => {
@@ -917,6 +931,31 @@ function renderProgress(rows) {
       <div class="ring-count">${r.actual} of ${r.target}</div>
     </div>`;
   }).join('');
+}
+
+// Quiet countdown badge to WSPD (Sep 10). Neutral by default; shifts to a
+// gentle amber only in the final 14 days as a "final stretch" cue.
+const WSPD_DATE = new Date(2026, 8, 10); // Sep 10, 2026 (month is 0-indexed)
+function renderCountdown() {
+  const badge = document.getElementById('countdown-badge');
+  const diffMs = WSPD_DATE - TODAY;
+  const days = Math.ceil(diffMs / 86400000);
+  badge.classList.remove('cd-soon','cd-today','cd-past');
+  if (days > 14) {
+    badge.textContent = `📅 ${days} days to WSPD`;
+  } else if (days > 1) {
+    badge.textContent = `📅 ${days} days to WSPD`;
+    badge.classList.add('cd-soon');
+  } else if (days === 1) {
+    badge.textContent = `📅 1 day to WSPD`;
+    badge.classList.add('cd-soon');
+  } else if (days === 0) {
+    badge.textContent = `📅 WSPD is today`;
+    badge.classList.add('cd-today');
+  } else {
+    badge.textContent = `📅 WSPD was ${Math.abs(days)}d ago`;
+    badge.classList.add('cd-past');
+  }
 }
 
 
