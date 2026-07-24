@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Call Log</title>
 <style>
-  /* ============ DESIGN TOKENS ============= */
+  /* ============ DESIGN TOKENS ============ */
   :root {
     --bg: #FAF6F2;
     --surface: #FFFFFF;
@@ -429,7 +429,7 @@
 /* ====================================================================
    CONFIGURATION — edit these two values for your deployment
    ==================================================================== */
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2SJMqHOu8uGoEnm0lOiZ7DP-xaG5QSVwOiUkWgsBhVtCAPQCqHM-L0vbTu3ybydt3jQ/exec";
+const APPS_SCRIPT_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE";
 
 // Risk level values (exactly as they appear in your Config sheet's
 // "Risk level" column) that should trigger the L2/L3-only questions.
@@ -441,8 +441,6 @@ const HIGH_RISK_LEVEL = "L3"; // triggers de-escalated / help provided
    Each field maps to: the Logs column name it writes to, and (for
    config-driven fields) the Config sheet column it reads options from.
    ==================================================================== */
-const YES_NO = ["Yes", "No"];
-
 // Type of call values (exactly as in Config) that route to each branch.
 const SDC_VALUE = "SDC/Inappropriate";
 const BEFRIENDING_VALUE = "Befriending";
@@ -475,15 +473,15 @@ const BEFRIENDING_FIELDS = [
 ];
 
 const RISK_FIELDS = [
-  { key: "Risk assessment conducted", type: "chips", options: YES_NO },
+  { key: "Risk assessment conducted", config: "Risk assessment conducted", type: "auto" },
   { key: "Risk level", config: "Risk level", type: "auto",
     showIf: (d) => d["Risk assessment conducted"] === "Yes" },
-  { key: "Self harm", type: "chips", options: YES_NO, showIf: isBranch("BEFRIENDING") },
-  { key: "Suicide promise taken", type: "chips", options: YES_NO,
+  { key: "Self harm", config: "Self harm", type: "auto", showIf: isBranch("BEFRIENDING") },
+  { key: "Suicide promise taken", config: "Suicide promise taken", type: "auto",
     showIf: (d) => ESCALATED_RISK_LEVELS.includes(d["Risk level"]) },
-  { key: "Call deescalated", type: "chips", options: YES_NO,
+  { key: "Call deescalated", config: "Call deescalated", type: "auto",
     showIf: (d) => d["Risk level"] === HIGH_RISK_LEVEL },
-  { key: "Help provided", type: "chips", options: YES_NO,
+  { key: "Help provided", config: "Help provided", type: "auto",
     showIf: (d) => d["Risk level"] === HIGH_RISK_LEVEL },
 ];
 
@@ -610,7 +608,7 @@ function buildIdentityHTML(savedName) {
     </div>` + buildDateLine();
   }
   return `
-    <label class="field-label">Your Pseudonym</label>
+    <label class="field-label">Your name</label>
     <div class="combo-wrap">
       <input type="text" id="pseudonymSearch" autocomplete="off" placeholder="Type your name…">
       <div class="combo-list" id="pseudonymListEl" style="display:none;"></div>
