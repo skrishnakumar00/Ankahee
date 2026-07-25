@@ -116,6 +116,7 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 .ring-fg { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.4s ease; }
 .ring-pct { font-size: 16px; font-weight: 700; }
 .ring-label { font-size: 11px; font-weight: 600; color: var(--text); margin-top: 8px; line-height: 1.3; }
+.ring-owner { font-weight: 500; color: var(--muted); }
 .ring-desc { font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
 .ring-count { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
 .ring-check { font-size: 11px; }
@@ -566,6 +567,7 @@ const TARGETS_ALIASES = {
   target: ['target','planned'],
   actual: ['actual','done','completed'],
   desc:   ['description','desc','details'],
+  owner:  ['owner','responsibility','responsible'],
 };
 
 let COL = {};
@@ -728,7 +730,7 @@ function parseTargetsCSV(text) {
     if (!cat) continue;
     const target = parseFloat(get(rows[i], 'target')) || 0;
     const actual = parseFloat(get(rows[i], 'actual')) || 0;
-    out.push({ cat, target, actual, desc: get(rows[i], 'desc') });
+    out.push({ cat, target, actual, desc: get(rows[i], 'desc'), owner: get(rows[i], 'owner') });
   }
   return out;
 }
@@ -926,7 +928,7 @@ function renderProgress(rows) {
           transform="rotate(-90 42 42)"></circle>
         <text x="42" y="47" text-anchor="middle" class="ring-pct" fill="${color}">${Math.round(pct)}%</text>
       </svg>
-      <div class="ring-label">${esc(r.cat)}${complete ? ' <span class="ring-check">✓</span>' : ''}</div>
+      <div class="ring-label">${esc(r.cat)} <span class="ring-owner">(${esc(r.owner)||'NA'})</span>${complete ? ' <span class="ring-check">✓</span>' : ''}</div>
       ${r.desc ? `<div class="ring-desc">${esc(r.desc)}</div>` : ''}
       <div class="ring-count">${r.actual} of ${r.target}</div>
     </div>`;
