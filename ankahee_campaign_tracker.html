@@ -106,11 +106,22 @@ main { max-width: 1160px; margin: 0 auto; padding: 24px 20px 60px; }
 .countdown-badge.cd-soon  { background: var(--amber-light); color: var(--amber); border-color: var(--amber-mid); }
 .countdown-badge.cd-today { background: var(--coral-light); color: var(--coral); border-color: var(--coral-mid); }
 .countdown-badge.cd-past  { background: var(--slate-light); color: var(--muted); border-color: var(--border); }
+.cat-mismatch-warning {
+  font-size: 11.5px; color: var(--amber); background: var(--amber-light);
+  border: 1px solid var(--amber-mid); border-radius: 6px;
+  padding: 8px 12px; margin-bottom: 14px; line-height: 1.6;
+}
+.cat-mismatch-warning .cmw-link {
+  cursor: pointer; font-weight: 700; text-decoration: underline dotted; text-underline-offset: 2px;
+}
+.cat-mismatch-warning .cmw-link:hover { color: #b87a08; }
 .progress-grid {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 18px;
 }
 .ring-item { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.ring-item.ring-clickable { cursor: pointer; border-radius: 10px; padding: 6px; margin: -6px; transition: background 0.15s, transform 0.12s; }
+.ring-item.ring-clickable:hover { background: var(--slate-light); transform: translateY(-2px); }
 .ring-svg { width: 84px; height: 84px; }
 .ring-bg { fill: none; stroke: var(--slate-light); stroke-width: 8; }
 .ring-fg { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.4s ease; }
@@ -412,6 +423,7 @@ body.hide-owner .col-owner { display: none !important; }
       <span class="progress-headline-txt" id="prog-headline-txt">completed overall</span>
       <span class="countdown-badge" id="countdown-badge">—</span>
     </div>
+    <div class="cat-mismatch-warning" id="cat-mismatch-warning" style="display:none;"></div>
     <div class="progress-grid" id="progress-grid"></div>
   </div>
 
@@ -606,7 +618,8 @@ function applyColumnVisibility() {
 // ── STATE ────────────────────────────────────────────────────────────────────
 let ALL = [];
 let TODAY = new Date(); TODAY.setHours(0,0,0,0);
-let QUICK = null; // active quick filter: 'pendongoing' | 'overdue' | 'nodate' | 'noowner' | 'parked' | null
+let QUICK = null; // active quick filter: 'pendongoing' | 'overdue' | 'nodate' | 'noowner' | 'parked' | 'missingcat' | null
+let MISSING_CATS = []; // task categories that have no matching row in the Targets tab
 
 // ── FETCH HELPERS ────────────────────────────────────────────────────────────
 async function fetchViaProxies(url) {
@@ -649,7 +662,11 @@ async function loadData() {
   // Targets — best-effort, silent on failure
   if (TARGETS_CSV_URL) {
     const targetsText = await fetchViaProxies(TARGETS_CSV_URL);
-    if (targetsText) renderProgress(parseTargetsCSV(targetsText));
+    if (targetsText) {
+      const targetRows = parseTargetsCSV(targetsText);
+      renderProgress(targetRows);
+      checkCategoryMismatch(targetRows);
+    }
   }
 
   document.getElementById('loading').style.display = 'none';
@@ -814,6 +831,7 @@ function filtered() {
   else if (QUICK==='nodate')      list = list.filter(isNoDate);
   else if (QUICK==='noowner')     list = list.filter(isNoOwner);
   else if (QUICK==='parked')      list = list.filter(t=>t.status==='Parked');
+  else if (QUICK==='missingcat')  list = list.filter(t=>MISSING_CATS.includes(t.cat));
   return list;
 }
 
@@ -847,6 +865,7 @@ const QUICK_LABELS = {
   nodate: 'No due date',
   noowner: 'No owner',
   parked: 'Parked ideas',
+  missingcat: 'No target set',
 };
 
 function updateActiveFilterBar() {
@@ -920,7 +939,7 @@ function renderProgress(rows) {
     const offset = C - (pct/100)*C;
     const color = ringColor(pct);
     const complete = r.target>0 && r.actual >= r.target;
-    return `<div class="ring-item">
+    return `<div class="ring-item ring-clickable" onclick='quickFilter({cat:${JSON.stringify(r.cat)}})'>
       <svg class="ring-svg" viewBox="0 0 84 84">
         <circle class="ring-bg" cx="42" cy="42" r="${R}"></circle>
         <circle class="ring-fg" cx="42" cy="42" r="${R}" stroke="${color}"
@@ -934,6 +953,22 @@ function renderProgress(rows) {
       <div class="ring-count">${r.actual} of ${r.target}</div>
     </div>`;
   }).join('');
+}
+
+// Flags task categories that exist in the Tasks tab but have no matching
+// row in the Targets tab — so they don't silently go unreviewed. Shown as a
+// quiet warning line, not an auto-generated ring (Targets = deliberate goals).
+function checkCategoryMismatch(targetRows) {
+  const warn = document.getElementById('cat-mismatch-warning');
+  const targetCats = new Set(targetRows.map(r => r.cat));
+  const taskCats = [...new Set(ALL.map(t => t.cat).filter(Boolean))];
+  MISSING_CATS = taskCats.filter(c => !targetCats.has(c));
+
+  if (MISSING_CATS.length === 0) { warn.style.display = 'none'; return; }
+  warn.style.display = 'block';
+  warn.innerHTML = `⚠ ${MISSING_CATS.length} categor${MISSING_CATS.length===1?'y has':'ies have'} no target set: ` +
+    `<strong>${MISSING_CATS.map(esc).join(', ')}</strong> — ` +
+    `<span class="cmw-link" onclick="quickFilter({quick:'missingcat'})">view tasks</span>`;
 }
 
 // Quiet countdown badge to WSPD (Sep 10). Neutral by default; shifts to a
