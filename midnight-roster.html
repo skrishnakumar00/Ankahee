@@ -26,7 +26,7 @@
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-  button, .cal-cell, .chip, .month-tab, .icon-btn, .refresh-btn {
+  button, .cal-cell, .chip, .month-tab, .icon-btn, .refresh-btn, .text-link-btn {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
@@ -77,11 +77,16 @@
 
   main { padding: 16px; max-width: 640px; margin: 0 auto; }
 
-  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-muted); margin-bottom: 14px; padding: 0 4px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-muted); margin-bottom: 4px; padding: 0 4px; }
   .legend span { display: inline-flex; align-items: center; gap: 5px; }
   .legend .dot { width: 10px; height: 10px; border-radius: 4px; display: inline-block; }
+  .legend-note { font-size: 12px; color: var(--text-muted); margin: 0 0 14px; padding: 0 4px; }
 
-  .toolbar-row { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+  .toolbar-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+  .text-link-btn {
+    background: none; border: none; color: var(--primary); font-size: 13px; font-weight: 600;
+    cursor: pointer; padding: 8px 4px; display: none;
+  }
   .refresh-btn {
     display: inline-flex; align-items: center; gap: 6px; background: none; border: none;
     color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer; padding: 8px 4px;
@@ -99,38 +104,38 @@
   }
   .month-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-  .month-summary { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; padding: 0 4px; flex-wrap: wrap; gap: 6px; }
-  .month-summary h2 { font-size: 15px; margin: 0; color: var(--primary-dark); }
-  .month-summary .count { font-size: 13px; color: var(--text-muted); }
+  .month-summary { margin-bottom: 10px; padding: 0 4px; }
+  .month-summary h2 { font-size: 15px; margin: 0 0 2px; color: var(--primary-dark); }
+  .month-summary .count { font-size: 12.5px; color: var(--text-muted); display: block; }
 
   .calendar-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 12px; }
   .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
   .cal-weekday { font-size: 11px; text-transform: uppercase; letter-spacing: 0.3px; color: var(--text-muted); text-align: center; padding-bottom: 6px; }
 
   .cal-cell {
-    min-height: 62px; border-radius: var(--radius-sm); padding: 5px 3px;
-    display: flex; flex-direction: column; gap: 2px;
-    border: 1.5px dashed var(--border); background: var(--surface); cursor: pointer;
+    min-height: 86px; border-radius: var(--radius-sm); padding: 5px 4px;
+    display: flex; flex-direction: column; gap: 3px;
+    border: none; background: var(--surface-soft); cursor: pointer;
   }
-  .cal-cell.empty { visibility: hidden; cursor: default; border: none; }
-  .cal-cell .day-num { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1; }
-  .cal-cell .names { font-size: 11px; line-height: 1.25; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; }
-  .cal-cell .badge { font-size: 10px; opacity: 0.85; }
-
-  .cal-cell.filled { border: none; background: var(--primary-soft); }
-  .cal-cell.filled .day-num, .cal-cell.filled .names { color: var(--primary-dark); }
-
-  .cal-cell.self { border: none; background: var(--primary-dark); }
-  .cal-cell.self .day-num, .cal-cell.self .names { color: #fff; }
-
+  .cal-cell.empty { visibility: hidden; cursor: default; background: transparent; }
+  .cal-cell .day-num { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 1px; }
   .cal-cell.prelaunch, .cal-cell.past { opacity: 0.42; cursor: default; }
+
+  .role-row { display: flex; align-items: center; gap: 4px; border-radius: 6px; padding: 3px 5px; min-height: 19px; }
+  .role-row .tag { font-size: 8.5px; font-weight: 800; letter-spacing: 0.3px; flex-shrink: 0; opacity: 0.8; }
+  .role-row .val { font-size: 10.5px; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .role-row.open { border: 1px dashed var(--border); color: var(--text-muted); background: var(--surface); }
+  .role-row.open .tag { color: var(--text-muted); }
+  .role-row.filled { background: var(--primary-soft); color: var(--primary-dark); }
+  .role-row.self { background: var(--primary-dark); color: #fff; }
+  .role-row.self .tag { color: #fff; }
 
   .overlay { position: fixed; inset: 0; background: rgba(46,42,51,0.4); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
   .overlay.hidden { display: none; }
   .sheet { background: var(--surface); border-radius: 14px 14px 0 0; padding: 20px; width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
   @media (min-width: 520px) { .overlay { align-items: center; } .sheet { border-radius: var(--radius); } }
-  .sheet h3 { margin: 0 0 8px; font-size: 17px; color: var(--text); }
-  .sheet p { margin: 0 0 16px; font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+  .sheet h3 { margin: 0 0 12px; font-size: 17px; color: var(--text); }
+  .sheet p { margin: 0 0 10px; font-size: 14px; color: var(--text-muted); line-height: 1.5; }
   .sheet-actions { display: flex; flex-direction: column; gap: 10px; }
   .sheet label { font-size: 13px; color: var(--text-muted); display: block; margin: 12px 0 6px; }
   .sheet select {
@@ -138,6 +143,11 @@
     border: 1px solid var(--border); font-size: 16px; background: var(--surface); color: var(--text);
   }
   .sheet .subnote { font-size: 12px; color: var(--text-muted); margin-top: -2px; margin-bottom: 4px; }
+
+  .sheet-role-block { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+  .sheet-role-block:last-of-type { border-bottom: none; margin-bottom: 8px; padding-bottom: 0; }
+  .sheet-role-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
+  .sheet-role-status { font-size: 14px; color: var(--text); margin: 0 0 10px; }
 
   .btn { border: none; border-radius: 999px; padding: 0 20px; height: 48px; font-size: 15px; font-weight: 600; cursor: pointer; }
   .btn-primary { background: var(--primary); color: #fff; }
@@ -147,6 +157,7 @@
   .btn-text { background: none; color: var(--text-muted); text-decoration: underline; min-height: 44px; padding: 8px; display: flex; align-items: center; justify-content: center; }
   .sheet p, .sheet h3 { -webkit-user-select: none; user-select: none; }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-sm { height: 40px; padding: 0 16px; font-size: 13.5px; }
 
   .toast {
     position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -170,7 +181,7 @@
   <img src="Logo.png" alt="Ankahee logo" onerror="this.style.display='none'">
   <div class="titles">
     <h1>Midnight Roster</h1>
-    <p>10pm – 12am shift · pick your dates</p>
+    <p>10pm – 12am shift · Listening &amp; Support</p>
   </div>
   <button class="icon-btn" id="helpBtn" aria-label="How this works">?</button>
 </header>
@@ -195,8 +206,10 @@
     <span><span class="dot" style="background:var(--primary-soft);"></span>Filled</span>
     <span><span class="dot" style="background:var(--primary-dark);"></span>You</span>
   </div>
+  <p class="legend-note">Each day shows two rows — <strong>L</strong> Listening, <strong>S</strong> Support.</p>
 
   <div class="toolbar-row">
+    <button class="text-link-btn" id="monthNavBtn">‹ Previous months</button>
     <button class="refresh-btn" id="refreshBtn">
       <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2v3.5H10" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Refresh
@@ -218,11 +231,26 @@
   const NAME_KEY = 'ankahee_volunteer_name';
   const LAUNCH_DATE = '2026-09-10'; // hardcoded start date for the shift
   const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const ROLES = ['Listening', 'Support'];
+  const ROLE_TAG = { Listening: 'L', Support: 'S' };
 
+  // volunteers: [{ name, roles: ['Listening'] | ['Support'] | ['Listening','Support'] }] — active-only, backend filters
+  // roster: [{ date, volunteer, role }]
   let volunteers = [];
   let roster = [];
   let currentVolunteer = sessionStorage.getItem(NAME_KEY) || '';
-  let activeMonthIndex = 0;
+
+  // Month window: the live default is always "today's month + next 2"
+  // (or launch month + next 2, pre-launch). monthsBackOffset shifts that
+  // whole 3-tab window backward one month at a time for browsing history;
+  // it's a transient viewing state, not a stored preference — it resets
+  // to 0 (the live window) on every fresh load.
+  let monthsBackOffset = 0;
+  // Which calendar month (year+month) is the active tab, tracked by
+  // actual month rather than tab index — so if the window shifts while
+  // that month is still visible, the same month stays selected instead
+  // of the selection jumping around.
+  let activeYearMonth = null;
 
   function pad(n) { return String(n).padStart(2, '0'); }
   function toDateStr(y, m, d) { return `${y}-${pad(m)}-${pad(d)}`; }
@@ -230,6 +258,11 @@
   function sameName(a, b) { return String(a).trim().toLowerCase() === String(b).trim().toLowerCase(); }
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function rolesOf(name) {
+    const v = volunteers.find(v => sameName(v.name, name));
+    return v ? v.roles : [];
   }
 
   function formatLabel(dateStr) {
@@ -240,23 +273,90 @@
     return `${weekday}, ${d} ${month}`;
   }
 
-  function monthList() {
+  // ---------- MONTH WINDOW ----------
+
+  // The live anchor month: whichever is later, today's month or the
+  // shift's launch month — so pre-launch the view starts at the launch
+  // month instead of showing empty earlier months.
+  function liveAnchorYM() {
     const today = new Date();
     const [ly, lm] = LAUNCH_DATE.split('-').map(Number);
     const launch = new Date(ly, lm - 1, 1);
-    // Anchor to whichever is later: today's month, or the shift's launch
-    // month, so pre-launch the view starts at September instead of
-    // showing empty earlier months.
     const anchor = today > launch ? today : launch;
+    return { year: anchor.getFullYear(), month: anchor.getMonth() + 1 };
+  }
+
+  function ymIndex(y, m) { return y * 12 + (m - 1); }
+
+  // How many months back from the live anchor we're allowed to browse —
+  // never earlier than the shift's launch month, since no roster exists
+  // before that.
+  function maxBackOffset() {
+    const a = liveAnchorYM();
+    const [ly, lm] = LAUNCH_DATE.split('-').map(Number);
+    return Math.max(0, ymIndex(a.year, a.month) - ymIndex(ly, lm));
+  }
+
+  // The 3 months currently shown in the tab row, given monthsBackOffset.
+  function monthList() {
+    const a = liveAnchorYM();
+    const startIdx = ymIndex(a.year, a.month) - monthsBackOffset;
     const months = [];
     for (let i = 0; i < 3; i++) {
-      const dt = new Date(anchor.getFullYear(), anchor.getMonth() + i, 1);
-      months.push({ year: dt.getFullYear(), month: dt.getMonth() + 1 });
+      const idx = startIdx + i;
+      months.push({ year: Math.floor(idx / 12), month: (idx % 12) + 1 });
     }
     return months;
   }
 
+  // Resolves which tab is active for the current window, keeping the same
+  // calendar month selected across a window shift when possible; falls
+  // back to the first (leftmost) tab otherwise — which, on stepping back,
+  // is exactly the newly revealed earlier month.
+  function getActiveMonth() {
+    const months = monthList();
+    let idx = activeYearMonth
+      ? months.findIndex(m => m.year === activeYearMonth.year && m.month === activeYearMonth.month)
+      : -1;
+    if (idx === -1) idx = 0;
+    activeYearMonth = { year: months[idx].year, month: months[idx].month };
+    return { months, idx, current: months[idx] };
+  }
+
   function daysInMonth(y, m) { return new Date(y, m, 0).getDate(); }
+
+  function stepBack() {
+    monthsBackOffset = Math.min(monthsBackOffset + 1, maxBackOffset());
+    renderMonthNav();
+    renderTabs();
+    renderCalendar();
+  }
+
+  function backToCurrent() {
+    monthsBackOffset = 0;
+    renderMonthNav();
+    renderTabs();
+    renderCalendar();
+  }
+
+  function renderMonthNav() {
+    const btn = document.getElementById('monthNavBtn');
+    if (monthsBackOffset === 0) {
+      if (maxBackOffset() > 0) {
+        btn.style.display = 'inline-flex';
+        btn.textContent = '‹ Previous months';
+      } else {
+        btn.style.display = 'none';
+      }
+    } else {
+      btn.style.display = 'inline-flex';
+      btn.textContent = 'Back to current ›';
+    }
+  }
+
+  document.getElementById('monthNavBtn').addEventListener('click', () => {
+    if (monthsBackOffset === 0) stepBack(); else backToCurrent();
+  });
 
   async function loadData() {
     try {
@@ -267,6 +367,7 @@
       roster = json.data.roster;
       populateVolunteerSelect();
       renderIdentity();
+      renderMonthNav();
       renderTabs();
       renderCalendar();
     } catch (err) {
@@ -278,7 +379,7 @@
   function populateVolunteerSelect() {
     const sel = document.getElementById('volunteerSelect');
     sel.innerHTML = '<option value="">Select your name</option>' +
-      volunteers.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+      volunteers.map(v => `<option value="${escapeHtml(v.name)}">${escapeHtml(v.name)} (${escapeHtml(v.roles.join(', '))})</option>`).join('');
   }
 
   function renderIdentity() {
@@ -314,15 +415,16 @@
 
   // ---------- TABS ----------
   function renderTabs() {
-    const months = monthList();
+    const { months, idx } = getActiveMonth();
     const wrap = document.getElementById('monthTabs');
     wrap.innerHTML = months.map(({ year, month }, i) => {
       const label = new Date(year, month - 1, 1).toLocaleDateString('en-IN', { month: 'short' });
-      return `<button class="month-tab ${i === activeMonthIndex ? 'active' : ''}" data-idx="${i}">${label}</button>`;
+      return `<button class="month-tab ${i === idx ? 'active' : ''}" data-idx="${i}">${label}</button>`;
     }).join('');
     wrap.querySelectorAll('.month-tab').forEach(btn => {
       btn.addEventListener('click', () => {
-        activeMonthIndex = parseInt(btn.dataset.idx, 10);
+        const i = parseInt(btn.dataset.idx, 10);
+        activeYearMonth = { year: months[i].year, month: months[i].month };
         renderTabs();
         renderCalendar();
       });
@@ -331,23 +433,30 @@
 
   // ---------- CALENDAR ----------
   function claimsForDate(dateStr) { return roster.filter(r => r.date === dateStr); }
+  function claimsForDateRole(dateStr, role) { return roster.filter(r => r.date === dateStr && r.role === role); }
+  // A volunteer holds at most one role on a given date — find it, if any.
+  function myClaimOnDate(dateStr) {
+    if (!currentVolunteer) return null;
+    return roster.find(r => r.date === dateStr && sameName(r.volunteer, currentVolunteer)) || null;
+  }
 
   function renderCalendar() {
-    const { year, month } = monthList()[activeMonthIndex];
+    const { year, month } = getActiveMonth().current;
     const today = todayStr();
     const dim = daysInMonth(year, month);
 
-    let filled = 0, total = 0;
+    let listeningFilled = 0, supportFilled = 0, total = 0;
     for (let d = 1; d <= dim; d++) {
       const dateStr = toDateStr(year, month, d);
       if (dateStr < LAUNCH_DATE) continue;
       total++;
-      if (claimsForDate(dateStr).length > 0) filled++;
+      if (claimsForDateRole(dateStr, 'Listening').length > 0) listeningFilled++;
+      if (claimsForDateRole(dateStr, 'Support').length > 0) supportFilled++;
     }
 
     const monthName = new Date(year, month - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
     document.getElementById('monthSummary').innerHTML =
-      `<h2>${monthName}</h2><span class="count">${filled} of ${total} days covered</span>`;
+      `<h2>${monthName}</h2><span class="count">Listening: ${listeningFilled} of ${total} days · Support: ${supportFilled} of ${total} days</span>`;
 
     const firstDow = new Date(year, month - 1, 1).getDay();
     let cellsHtml = WEEKDAY_LABELS.map(w => `<div class="cal-weekday">${w}</div>`).join('');
@@ -358,32 +467,38 @@
       const isPrelaunch = dateStr < LAUNCH_DATE;
       const isPast = !isPrelaunch && dateStr < today;
       const claims = claimsForDate(dateStr);
-      const isSelf = currentVolunteer && claims.some(c => sameName(c.volunteer, currentVolunteer));
 
       let cls = 'cal-cell';
       if (isPrelaunch) cls += ' prelaunch';
       else if (isPast) cls += ' past';
-      else if (isSelf) cls += ' self';
-      else if (claims.length > 0) cls += ' filled';
 
-      let namesHtml = '';
-      let titleAttr = '';
+      let rowsHtml = '';
+      let titleParts = [];
       if (!isPrelaunch) {
-        if (claims.length === 0) {
-          namesHtml = `<div class="names">Open</div>`;
-        } else {
-          const allNames = claims.map(c => c.volunteer).join(', ');
-          titleAttr = `title="${escapeHtml(allNames)}"`;
-          const first = claims.find(c => isSelf && sameName(c.volunteer, currentVolunteer)) || claims[0];
-          const extra = claims.length - 1;
-          namesHtml = `<div class="names">${escapeHtml(first.volunteer)}${extra > 0 ? `<span class="badge"> +${extra}</span>` : ''}</div>`;
-        }
+        ROLES.forEach(role => {
+          const roleClaims = claims.filter(c => c.role === role);
+          const isSelf = currentVolunteer && roleClaims.some(c => sameName(c.volunteer, currentVolunteer));
+          const rowCls = 'role-row ' + (isSelf ? 'self' : roleClaims.length ? 'filled' : 'open');
+          let val;
+          if (roleClaims.length === 0) {
+            val = 'Open';
+          } else {
+            const first = roleClaims.find(c => isSelf && sameName(c.volunteer, currentVolunteer)) || roleClaims[0];
+            const extra = roleClaims.length - 1;
+            val = escapeHtml(first.volunteer) + (extra > 0 ? ` +${extra}` : '');
+            titleParts.push(`${role}: ${roleClaims.map(c => c.volunteer).join(', ')}`);
+          }
+          rowsHtml += `<div class="${rowCls}"><span class="tag">${ROLE_TAG[role]}</span><span class="val">${val}</span></div>`;
+        });
       }
 
+      // Past dates (including in browsed-back months) are read-only —
+      // same rule as today's near-term dates, no new logic needed.
       const clickable = !isPrelaunch && !isPast;
+      const titleAttr = titleParts.length ? `title="${escapeHtml(titleParts.join(' · '))}"` : '';
       cellsHtml += `<div class="${cls}" ${clickable ? `data-date="${dateStr}"` : ''} ${titleAttr}>
         <div class="day-num">${d}</div>
-        ${namesHtml}
+        ${rowsHtml}
       </div>`;
     }
 
@@ -398,56 +513,65 @@
   // ---------- DATE TAP ----------
   function onDateTap(dateStr) {
     const claims = claimsForDate(dateStr);
-    const selfClaim = currentVolunteer && claims.find(c => sameName(c.volunteer, currentVolunteer));
 
     if (!currentVolunteer) {
-      const who = claims.length ? claims.map(c => escapeHtml(c.volunteer)).join(', ') : 'No one yet — open';
+      const parts = ROLES.map(role => {
+        const roleClaims = claims.filter(c => c.role === role);
+        const who = roleClaims.length ? roleClaims.map(c => escapeHtml(c.volunteer)).join(', ') : 'Open';
+        return `<div class="sheet-role-block"><div class="sheet-role-label">${role}</div><p class="sheet-role-status">${who}</p></div>`;
+      }).join('');
       showSheet(`
         <h3>${formatLabel(dateStr)}</h3>
-        <p>${who}</p>
-        <p style="margin-top:-8px;">Select your name above to claim or manage a date.</p>
+        ${parts}
+        <p style="margin-top:-4px;">Select your name above to claim or manage a date.</p>
         <div class="sheet-actions"><button class="btn btn-text" id="cancelSheetBtn">Close</button></div>
       `);
       bindCancel();
       return;
     }
 
-    if (!selfClaim) {
-      const others = claims.length ? `<p>Already on this date: ${claims.map(c => escapeHtml(c.volunteer)).join(', ')}</p>` : '';
-      showSheet(`
-        <h3>Claim ${formatLabel(dateStr)}?</h3>
-        ${others}
-        <p>You'll be added as a volunteer for this date.</p>
-        <div class="sheet-actions">
-          <button class="btn btn-primary" id="confirmClaimBtn">Claim this date</button>
-          <button class="btn btn-text" id="cancelSheetBtn">Cancel</button>
-        </div>
-      `);
-      document.getElementById('confirmClaimBtn').addEventListener('click', async () => {
-        closeSheet();
-        await doClaim(dateStr);
-      });
-      bindCancel();
-      return;
-    }
+    const myRoles = rolesOf(currentVolunteer);
+    const myClaim = myClaimOnDate(dateStr);
 
-    // Self is on this date: offer swap / replace / delete
-    const othersHere = claims.filter(c => !sameName(c.volunteer, currentVolunteer));
-    const alsoOn = othersHere.length ? `<p>Also on this date: ${othersHere.map(c => escapeHtml(c.volunteer)).join(', ')}</p>` : '';
-    showSheet(`
-      <h3>${formatLabel(dateStr)}</h3>
-      ${alsoOn || '<p>This is your date.</p>'}
-      <div class="sheet-actions">
-        <button class="btn btn-secondary" id="swapBtn">Swap with another volunteer</button>
-        <button class="btn btn-secondary" id="replaceBtn">Replace with another volunteer</button>
-        <button class="btn btn-risk" id="deleteBtn">Remove myself (date goes open)</button>
-        <button class="btn btn-text" id="cancelSheetBtn">Cancel</button>
-      </div>
-    `);
-    document.getElementById('swapBtn').addEventListener('click', () => openSwapForm(dateStr));
-    document.getElementById('replaceBtn').addEventListener('click', () => openReplaceForm(dateStr, claims));
-    document.getElementById('deleteBtn').addEventListener('click', () => openDeleteConfirm(dateStr));
+    let html = `<h3>${formatLabel(dateStr)}</h3>`;
+    ROLES.forEach(role => {
+      const roleClaims = claims.filter(c => c.role === role);
+      const isSelfHere = myClaim && myClaim.role === role;
+      const who = roleClaims.length ? roleClaims.map(c => escapeHtml(c.volunteer)).join(', ') : 'Open';
+
+      html += `<div class="sheet-role-block"><div class="sheet-role-label">${role}</div><p class="sheet-role-status">${who}</p>`;
+
+      if (isSelfHere) {
+        html += `<div class="sheet-actions">
+          <button class="btn btn-secondary btn-sm" data-role="${role}" id="swapBtn_${role}">Swap with another volunteer</button>
+          <button class="btn btn-secondary btn-sm" data-role="${role}" id="replaceBtn_${role}">Replace with another volunteer</button>
+          <button class="btn btn-risk btn-sm" data-role="${role}" id="deleteBtn_${role}">Remove myself (goes open)</button>
+        </div>`;
+      } else if (!myClaim && myRoles.includes(role)) {
+        html += `<div class="sheet-actions"><button class="btn btn-primary btn-sm" data-role="${role}" id="claimBtn_${role}">Claim as ${role}</button></div>`;
+      } else if (myClaim && myClaim.role !== role) {
+        html += `<p class="subnote">You're already on this date as ${myClaim.role} — one role per date.</p>`;
+      }
+      html += `</div>`;
+    });
+    html += `<div class="sheet-actions"><button class="btn btn-text" id="cancelSheetBtn">Close</button></div>`;
+
+    showSheet(html);
     bindCancel();
+
+    ROLES.forEach(role => {
+      const claimBtn = document.getElementById(`claimBtn_${role}`);
+      if (claimBtn) claimBtn.addEventListener('click', async () => { closeSheet(); await doClaim(dateStr, role); });
+
+      const swapBtn = document.getElementById(`swapBtn_${role}`);
+      if (swapBtn) swapBtn.addEventListener('click', () => openSwapForm(dateStr, role));
+
+      const replaceBtn = document.getElementById(`replaceBtn_${role}`);
+      if (replaceBtn) replaceBtn.addEventListener('click', () => openReplaceForm(dateStr, role, claims));
+
+      const deleteBtn = document.getElementById(`deleteBtn_${role}`);
+      if (deleteBtn) deleteBtn.addEventListener('click', () => openDeleteConfirm(dateStr, role));
+    });
   }
 
   function bindCancel() {
@@ -456,23 +580,23 @@
   }
 
   // ---------- SWAP ----------
-  function volunteerFutureDates(name, excludeDate) {
+  function volunteerFutureDatesForRole(name, role, excludeDate) {
     const today = todayStr();
     return roster
-      .filter(r => sameName(r.volunteer, name) && r.date >= today && r.date !== excludeDate)
+      .filter(r => sameName(r.volunteer, name) && r.role === role && r.date >= today && r.date !== excludeDate)
       .map(r => r.date)
       .sort();
   }
 
-  function openSwapForm(dateA) {
-    const others = volunteers.filter(v => !sameName(v, currentVolunteer));
+  function openSwapForm(dateA, role) {
+    const others = volunteers.filter(v => v.roles.includes(role) && !sameName(v.name, currentVolunteer));
     showSheet(`
-      <h3>Swap ${formatLabel(dateA)}</h3>
-      <p>Pick who you're swapping with — they must already have a date claimed.</p>
+      <h3>Swap ${formatLabel(dateA)} (${role})</h3>
+      <p>Pick who you're swapping with — they must already have a ${role.toLowerCase()} date claimed.</p>
       <label for="swapVolunteer">Swap with</label>
       <select id="swapVolunteer">
         <option value="">Select a volunteer</option>
-        ${others.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('')}
+        ${others.map(v => `<option value="${escapeHtml(v.name)}">${escapeHtml(v.name)}</option>`).join('')}
       </select>
       <label for="swapDate">Their date</label>
       <select id="swapDate" disabled><option value="">Select a volunteer first</option></select>
@@ -488,6 +612,9 @@
     const dateSel = document.getElementById('swapDate');
     const note = document.getElementById('swapNote');
     const confirmBtn = document.getElementById('confirmSwapBtn');
+    // Dates where I already hold a claim (any role) — I can't take on a second
+    // date's role there without breaking the one-role-per-date rule.
+    const myBusyDates = new Set(roster.filter(r => sameName(r.volunteer, currentVolunteer)).map(r => r.date));
 
     volSel.addEventListener('change', () => {
       const y = volSel.value;
@@ -498,11 +625,11 @@
         note.textContent = '';
         return;
       }
-      const dates = volunteerFutureDates(y, dateA).filter(d => !volunteerFutureDates(currentVolunteer, null).includes(d));
+      const dates = volunteerFutureDatesForRole(y, role, dateA).filter(d => !myBusyDates.has(d));
       if (dates.length === 0) {
         dateSel.disabled = true;
         dateSel.innerHTML = '<option value="">No available dates to swap</option>';
-        note.textContent = `${y} has no other upcoming date you don't already have.`;
+        note.textContent = `${y} has no other upcoming ${role.toLowerCase()} date that works.`;
         return;
       }
       dateSel.disabled = false;
@@ -516,21 +643,22 @@
     confirmBtn.addEventListener('click', async () => {
       const y = volSel.value, dateB = dateSel.value;
       closeSheet();
-      await doSwap(dateA, dateB, y);
+      await doSwap(dateA, role, dateB, y);
     });
   }
 
   // ---------- REPLACE ----------
-  function openReplaceForm(dateStr, claims) {
-    const already = new Set(claims.map(c => c.volunteer.trim().toLowerCase()));
-    const eligible = volunteers.filter(v => !already.has(v.trim().toLowerCase()));
+  function openReplaceForm(dateStr, role, claims) {
+    // A replacement can't already hold any role on this date.
+    const alreadyBusy = new Set(claims.map(c => c.volunteer.trim().toLowerCase()));
+    const eligible = volunteers.filter(v => v.roles.includes(role) && !alreadyBusy.has(v.name.trim().toLowerCase()));
     showSheet(`
-      <h3>Replace on ${formatLabel(dateStr)}</h3>
+      <h3>Replace on ${formatLabel(dateStr)} (${role})</h3>
       <p>They'll take over this date fully — you'll be removed.</p>
       <label for="replaceVolunteer">Replace with</label>
       <select id="replaceVolunteer">
         <option value="">Select a volunteer</option>
-        ${eligible.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('')}
+        ${eligible.map(v => `<option value="${escapeHtml(v.name)}">${escapeHtml(v.name)}</option>`).join('')}
       </select>
       <div class="sheet-actions">
         <button class="btn btn-primary" id="confirmReplaceBtn" disabled>Confirm replace</button>
@@ -544,15 +672,15 @@
     confirmBtn.addEventListener('click', async () => {
       const y = sel.value;
       closeSheet();
-      await doReplace(dateStr, y);
+      await doReplace(dateStr, role, y);
     });
   }
 
   // ---------- DELETE ----------
-  function openDeleteConfirm(dateStr) {
+  function openDeleteConfirm(dateStr, role) {
     showSheet(`
-      <h3>Remove yourself from ${formatLabel(dateStr)}?</h3>
-      <p>This date will show as Open until someone else claims it.</p>
+      <h3>Remove yourself from ${formatLabel(dateStr)} (${role})?</h3>
+      <p>This date will show ${role} as Open until someone else claims it.</p>
       <div class="sheet-actions">
         <button class="btn btn-risk" id="confirmDeleteBtn">Remove me</button>
         <button class="btn btn-text" id="cancelSheetBtn">Cancel</button>
@@ -561,57 +689,57 @@
     bindCancel();
     document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
       closeSheet();
-      await doDelete(dateStr);
+      await doDelete(dateStr, role);
     });
   }
 
   // ---------- API CALLS ----------
-  async function doClaim(dateStr) {
+  async function doClaim(dateStr, role) {
     try {
-      const res = await postAction({ action: 'claim', date: dateStr, volunteer: currentVolunteer });
+      const res = await postAction({ action: 'claim', date: dateStr, volunteer: currentVolunteer, role });
       if (res.success) {
         roster = res.data;
         renderCalendar();
-        showToast(`You're on for ${formatLabel(dateStr)}. Thank you.`);
+        showToast(`You're on for ${formatLabel(dateStr)} (${role}). Thank you.`);
       } else {
         showToast(res.error || 'Could not save. Try again.', true);
       }
     } catch (e) { showToast('Connection problem. Try again.', true); }
   }
 
-  async function doSwap(dateA, dateB, volunteerY) {
+  async function doSwap(dateA, role, dateB, volunteerY) {
     try {
-      const res = await postAction({ action: 'swap', dateA, volunteerX: currentVolunteer, dateB, volunteerY });
+      const res = await postAction({ action: 'swap', dateA, role, volunteerX: currentVolunteer, dateB, volunteerY });
       if (res.success) {
         roster = res.data;
         renderCalendar();
-        showToast(`Swapped — you're now on ${formatLabel(dateB)}.`);
+        showToast(`Swapped — you're now on ${formatLabel(dateB)} (${role}).`);
       } else {
         showToast(res.error || 'Could not swap. Try again.', true);
       }
     } catch (e) { showToast('Connection problem. Try again.', true); }
   }
 
-  async function doReplace(dateStr, volunteerY) {
+  async function doReplace(dateStr, role, volunteerY) {
     try {
-      const res = await postAction({ action: 'replace', date: dateStr, volunteerX: currentVolunteer, volunteerY });
+      const res = await postAction({ action: 'replace', date: dateStr, role, volunteerX: currentVolunteer, volunteerY });
       if (res.success) {
         roster = res.data;
         renderCalendar();
-        showToast(`Done — ${volunteerY} is now on ${formatLabel(dateStr)}.`);
+        showToast(`Done — ${volunteerY} is now on ${formatLabel(dateStr)} (${role}).`);
       } else {
         showToast(res.error || 'Could not replace. Try again.', true);
       }
     } catch (e) { showToast('Connection problem. Try again.', true); }
   }
 
-  async function doDelete(dateStr) {
+  async function doDelete(dateStr, role) {
     try {
-      const res = await postAction({ action: 'delete', date: dateStr, volunteer: currentVolunteer });
+      const res = await postAction({ action: 'delete', date: dateStr, role, volunteer: currentVolunteer });
       if (res.success) {
         roster = res.data;
         renderCalendar();
-        showToast(`Removed. ${formatLabel(dateStr)} is now open.`);
+        showToast(`Removed. ${formatLabel(dateStr)} (${role}) is now open.`);
       } else {
         showToast(res.error || 'Could not remove. Try again.', true);
       }
@@ -654,14 +782,16 @@
     showSheet(`
       <h3>How this works</h3>
       <p><strong>Pick your name</strong> once at the top — it stays selected for your visit.</p>
-      <p><strong>Tap any open date</strong> to claim it for the midnight shift.</p>
-      <p><strong>Tap one of your own dates</strong> to:</p>
+      <p>Each date shows two rows: <strong>L</strong> Listening and <strong>S</strong> Support.</p>
+      <p><strong>Tap any open row's date</strong> to claim it — you'll only be offered roles you're set up for.</p>
+      <p>You can hold only <strong>one role per date</strong>, even if you're eligible for both.</p>
+      <p><strong>Tap a date where you're already on</strong> to:</p>
       <p style="margin-top:-10px;">
-        <strong>Swap</strong> — trade with another volunteer who already has a date<br>
-        <strong>Replace</strong> — hand your date to someone else<br>
-        <strong>Remove yourself</strong> — date goes back to open, no replacement needed
+        <strong>Swap</strong> — trade with another volunteer in the same role<br>
+        <strong>Replace</strong> — hand your date to someone else in the same role<br>
+        <strong>Remove yourself</strong> — that row goes back to open
       </p>
-      <p><strong>Switch months</strong> using the tabs at the top (Sep / Oct / Nov).</p>
+      <p><strong>Switch months</strong> using the tabs at the top. Use <strong>Previous months</strong> to look back at earlier months (read-only); <strong>Back to current</strong> returns you to today's view.</p>
       <p style="margin-bottom:0;">Past dates are shown but can't be changed.</p>
       <div class="sheet-actions" style="margin-top:16px;"><button class="btn btn-primary" id="cancelSheetBtn">Got it</button></div>
     `);
@@ -681,6 +811,8 @@
         volunteers = json.data.volunteers;
         roster = json.data.roster;
         populateVolunteerSelect();
+        renderMonthNav();
+        renderTabs();
         renderCalendar();
         if (announce) showToast('Refreshed.');
       }
