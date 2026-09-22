@@ -165,18 +165,30 @@
   .role-row.self.role-Support { background: var(--support-dark); }
   .role-row.self .val { color: #fff; font-weight: 600; }
 
-  /* Phones: names are what force the horizontal scroll on a 7-column
-     grid, so below this width we drop straight to a compact dot/chip —
-     role (chip letter+color) and status (open/filled/self border+fill)
-     both still fully visible, just without the name. Full names are one
-     tap away in the sheet either way. Desktop/tablet keep the name. */
+  /* Phones: instead of squeezing 7 columns to fit (which breaks names)
+     or switching to a different layout (a day-strip — tried, wasn't the
+     right feel), the grid stays exactly as-is, just wider than the
+     screen: fixed-width columns instead of 1fr, wrapped in one scroll
+     region. The header row and every week row are part of the same
+     grid, so they pan sideways together automatically — no separate
+     sync logic needed. Always starts scrolled to Sunday. */
   @media (max-width: 480px) {
-    .calendar-card { padding: 8px 6px; }
-    .calendar-grid { gap: 3px; }
-    .cal-cell { min-height: 56px; padding: 4px 2px; gap: 2px; }
-    .cal-cell .day-num { font-size: 11px; }
-    .role-row { justify-content: center; padding: 2px; min-height: 16px; }
-    .role-row .val { display: none; }
+    .calendar-card { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory; }
+    .calendar-card::-webkit-scrollbar { display: none; }
+    .calendar-card::after {
+      content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 26px;
+      background: linear-gradient(to right, rgba(255,255,255,0), var(--surface));
+      pointer-events: none; border-radius: 0 var(--radius) var(--radius) 0;
+    }
+    .calendar-grid { grid-template-columns: repeat(7, 74px); gap: 5px; width: max-content; }
+    /* Header + day cells are one flat list of direct grid children, 7
+       per row, so nth-child(7n+1)/(7n+5) picks out every row's Sunday
+       and Thursday column consistently — the only two x-positions a
+       swipe is allowed to settle on. Every other column is scrollable
+       past but never a stopping point, so force/speed of the swipe
+       can't land you a random 1–2 days into a page anymore. */
+    .calendar-grid > :nth-child(7n+1),
+    .calendar-grid > :nth-child(7n+5) { scroll-snap-align: start; }
   }
 
   .overlay { position: fixed; inset: 0; background: rgba(46,42,51,0.4); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
