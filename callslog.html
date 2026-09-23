@@ -378,6 +378,58 @@
     margin: 0;
   }
 
+  /* ============ ROSTER NUDGE (v2) ============ */
+  .nudge-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 14px 8px 10px 16px;
+    margin-bottom: 16px;
+  }
+  .nudge-card.nudge-thanks { border-left-color: var(--success); }
+  .nudge-body { flex: 1; min-width: 0; }
+  .nudge-text {
+    font-size: 15px;
+    line-height: 1.45;
+    color: var(--text);
+    margin: 0;
+  }
+  .nudge-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .nudge-link:active { color: var(--primary-dark); }
+  .nudge-thanks .nudge-link { color: var(--success); }
+  .nudge-dismiss {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    margin-top: -8px;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 999px;
+  }
+  .nudge-dismiss:active { background: var(--surface-soft); }
+  .nudge-link:focus-visible, .nudge-dismiss:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
   .loading-note {
     text-align: center;
     padding: 40px 16px;
@@ -435,6 +487,10 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw2SJMqHOu8uGoE
 // "Risk level" column) that should trigger the L2/L3-only questions.
 const ESCALATED_RISK_LEVELS = ["L2", "L3"];
 const HIGH_RISK_LEVEL = "L3"; // triggers de-escalated / help provided
+
+// Midnight Roster page — the nudge card links here with ?name=<Name>
+// so the roster opens with this volunteer already selected.
+const ROSTER_URL = "https://skrishnakumar00.github.io/Ankahee/midnight-roster.html";
 
 /* ====================================================================
    FIELD DEFINITIONS
@@ -530,6 +586,10 @@ function cleanupFormDataForBranch() {
 let CONFIG = {};
 let formData = {};
 let pseudonymList = [];
+// Roster nudge (v2): one record for whoever is currently logging.
+// status: "loading" | "ready" | "none"; visible drops to false on dismiss,
+// link tap, or first save — the card never comes back in this page view.
+let nudge = { pseudonym: null, status: "none", content: null, visible: false };
 
 /* ====================================================================
    INIT
@@ -567,6 +627,14 @@ function buildForm() {
   identitySection.innerHTML = buildIdentityHTML(savedName);
   root.appendChild(identitySection);
   wireIdentity(savedName);
+
+  // ---- Roster nudge (v2) — only once a name is set; fills in async ----
+  if (savedName) {
+    const nudgeSlot = document.createElement("div");
+    nudgeSlot.id = "nudgeSlot";
+    root.appendChild(nudgeSlot);
+    maybeLoadNudge(savedName);
+  }
 
   // ---- Call basics (Type of call first, then universal fields) ----
   root.appendChild(buildSection("Call basics", null, [TYPE_OF_CALL_FIELD, ...BASICS_FIELDS], false));
@@ -908,6 +976,7 @@ async function handleSave() {
       body: JSON.stringify(payload)
     });
     showConfirmation();
+    nudge.visible = false; // card has had its moment; don't carry it into the next log
     resetFormKeepingIdentity();
   } catch (err) {
     console.error(err);
@@ -944,6 +1013,96 @@ function resetFormKeepingIdentity() {
   };
   buildForm();
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ====================================================================
+   ROSTER NUDGE (v2)
+   Once per browser session per volunteer (sessionStorage), after the
+   name is set. Fetched in the background — never delays or blocks the
+   form; any failure just means no card.
+   ==================================================================== */
+const NUDGE_SEEN_PREFIX = "rosterNudgeSeen:";
+const NUDGE_MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+function maybeLoadNudge(pseudonym) {
+  if (nudge.pseudonym === pseudonym) { renderNudge(); return; }
+
+  // A different volunteer (first load, or after "Not you?") gets their own nudge.
+  nudge = { pseudonym, status: "none", content: null, visible: false };
+  const seenKey = NUDGE_SEEN_PREFIX + pseudonym.trim().toLowerCase();
+  if (sessionStorage.getItem(seenKey)) return;
+
+  nudge.status = "loading";
+  fetch(APPS_SCRIPT_URL + "?action=getRosterNudge&pseudonym=" + encodeURIComponent(pseudonym))
+    .then(res => res.json())
+    .then(json => {
+      if (nudge.pseudonym !== pseudonym) return; // name changed while loading
+      const content = json.status === "success" ? buildNudgeContent(json.nudge) : null;
+      if (!content) { nudge.status = "none"; return; }
+      nudge.status = "ready";
+      nudge.content = content;
+      nudge.visible = true;
+      sessionStorage.setItem(seenKey, "1");
+      renderNudge();
+    })
+    .catch(err => {
+      console.error(err);
+      if (nudge.pseudonym === pseudonym) nudge.status = "none";
+    });
+}
+
+// Decides what (if anything) to say. Returns null for "no card".
+function buildNudgeContent(n) {
+  if (!n || !n.name || !Array.isArray(n.months) || n.months.length === 0) return null;
+  const monthName = m => NUDGE_MONTH_NAMES[m.month - 1];
+  const covered = n.months.filter(m => m.covered);
+  const askable = n.months.filter(m => !m.covered && m.openDates > 0);
+  const link = ROSTER_URL + "?name=" + encodeURIComponent(n.name);
+
+  if (askable.length === 0) {
+    if (covered.length === 0) return null; // nothing covered, nothing open to ask for
+    const text = covered.length === n.months.length
+      ? `Thank you — you're on the midnight roster for ${joinMonths(covered.map(monthName))}.`
+      : `Thank you for your ${joinMonths(covered.map(monthName))} midnight ${covered.length > 1 ? "shifts" : "shift"}. The other months are already full.`;
+    return { thanks: true, text, linkText: "See your dates", link };
+  }
+
+  const askMonths = joinMonths(askable.map(monthName));
+  const takeOne = askable.length > 1 ? "Could you take one in each?" : "Could you take one?";
+  const hasHave = askable.length > 1 ? "have" : "has";
+  const text = covered.length > 0
+    ? `Thank you for your ${joinMonths(covered.map(monthName))} midnight ${covered.length > 1 ? "shifts" : "shift"}. ${askMonths} still ${hasHave} open Listening dates. ${takeOne}`
+    : `The midnight shift (10pm–12am) still has open Listening dates in ${askMonths}. ${takeOne}`;
+  return { thanks: false, text, linkText: "Pick a date", link };
+}
+
+function joinMonths(names) {
+  if (names.length <= 1) return names.join("");
+  return names.slice(0, -1).join(", ") + " and " + names[names.length - 1];
+}
+
+function renderNudge() {
+  const slot = document.getElementById("nudgeSlot");
+  if (!slot) return;
+  if (!nudge.visible || !nudge.content) { slot.innerHTML = ""; return; }
+  const c = nudge.content;
+  slot.innerHTML = `
+    <div class="nudge-card${c.thanks ? " nudge-thanks" : ""}" role="status">
+      <div class="nudge-body">
+        <p class="nudge-text">${escapeHtml(c.text)}</p>
+        <a class="nudge-link" id="nudgeLink" href="${escapeHtml(c.link)}" target="_blank" rel="noopener">${escapeHtml(c.linkText)}</a>
+      </div>
+      <button type="button" class="nudge-dismiss" id="nudgeDismiss" aria-label="Dismiss">×</button>
+    </div>`;
+  // Roster opens in a new tab, so a half-filled log here is never lost.
+  document.getElementById("nudgeLink").addEventListener("click", () => {
+    nudge.visible = false;
+    setTimeout(renderNudge, 0);
+  });
+  document.getElementById("nudgeDismiss").addEventListener("click", () => {
+    nudge.visible = false;
+    renderNudge();
+  });
 }
 
 /* ====================================================================
