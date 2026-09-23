@@ -460,6 +460,7 @@
       if (!json.success) throw new Error(json.error || 'Failed to load');
       volunteers = json.data.volunteers;
       roster = json.data.roster;
+      applyNameFromUrl();
       setupIdentityCombobox();
       renderIdentity();
       renderMonthNav();
@@ -469,6 +470,25 @@
       document.getElementById('content').innerHTML =
         `<div class="loading">Couldn't load the roster. Check your connection and reload the page.</div>`;
     }
+  }
+
+  // v2: ?name=<Name> (sent by the Call Log's roster nudge) pre-selects
+  // that volunteer, as if they'd picked it in the name box. Only honoured
+  // if it matches an active volunteer from the backend's list; anything
+  // else is ignored silently and the normal picker shows. The parameter
+  // is removed from the address bar right away, so a refresh, bookmark or
+  // shared link doesn't keep carrying the name.
+  function applyNameFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('name');
+    if (raw === null) return;
+    params.delete('name');
+    const qs = params.toString();
+    history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
+    const match = volunteers.find(v => sameName(v.name, raw));
+    if (!match) return;
+    currentVolunteer = match.name;
+    sessionStorage.setItem(NAME_KEY, currentVolunteer);
   }
 
   function setupIdentityCombobox() {
